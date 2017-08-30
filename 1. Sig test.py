@@ -26,8 +26,11 @@ case_study = "Lisbon"
 # Set the paths to the directories and relevant data
 data_path = base_path + "EU_data\\"
 output_path = base_path + "EU_output\\"
-map1_path = data_path + case_study + "\\" + case_study.lower() + "_1990.asc"
-map2_path = data_path + case_study + "\\" + case_study.lower() + "_2000.asc"
+# Specify the original map (data at time slice 1).
+omap_path = data_path + case_study + "\\" + case_study.lower() + "_1990.asc"
+# Specify the actual map (data at time slice 2).
+amap_path = data_path + case_study + "\\" + case_study.lower() + "_2000.asc"
+# Specify the masking map.
 mask_path = data_path + case_study + "\\" + case_study.lower() + "_mask.asc"
 # Set the land-use class names.
 luc_names = ["Natural areas", "Arable land", "Permanent crops", "Pastures",
@@ -44,9 +47,9 @@ act = luc - (pas + fea)
 max_distance = 5
 
 # Read in the map for time slice 1.
-omap = read_map(map1_path)
+omap = read_map(omap_path)
 # Read in the map for time slice 2.
-amap = read_map(map2_path)
+amap = read_map(amap_path)
 # Read in the masking map.
 mask = read_map(mask_path)
 # Analyse the input maps for evaluation purposes
