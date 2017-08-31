@@ -38,7 +38,7 @@ from math import log10
 # calibration tool-pack.
 base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
 # Set the case study
-case_study = "Lisbon"
+case_study = "Berlin"
 # Set the paths to the directories and relevant data
 data_path = base_path + "EU_data\\"
 output_path = base_path + "EU_output\\"
@@ -161,12 +161,12 @@ base_seed = 1000
 max_runs = 1
 # Specify the minimum, maximum, and number of intervals to be tested for the
 # meta-parameter values (theta).
-min_theta_st = 0.010
+min_theta_st = 0.0875
 max_theta_st = 0.100
-min_theta_cp = 0.010
-max_theta_cp = 0.100
-min_theta_it = 0.005
-max_theta_it = 0.050
+min_theta_cp = 0.0125
+max_theta_cp = 0.0375
+min_theta_it = 0.0125
+max_theta_it = 0.015625
 intervals = 5
 
 # Generate a list of meta-parameter values to test.
@@ -183,8 +183,6 @@ for i in range(0, intervals):
 
 # Initialise a dictionary to store metric values.
 coarse_metrics = {}
-# Set the constant value for the deviation metric calculation.
-dev_const = 0.25
 
 # Initialise the map comparison library for the calculation of Fuzzy Kappa.
 """
@@ -203,7 +201,7 @@ for p in range(0, intervals):
     print("Theta self-influence tail value: " + str(theta_st))
     for q in range(0, intervals):
         theta_cp = theta_cp_values[q]
-        print("Theta conversion point tail value: " + str(theta_cp))
+        print("Theta conversion point value: " + str(theta_cp))
         for r in range(0, intervals):
             theta_it = theta_it_values[r]
             print("Theta interactive tail value: " + str(theta_it))
@@ -331,7 +329,6 @@ for p in range(0, intervals):
             kappa_log = [0] * max_runs
             kappa_sim_log = [0] * max_runs
             clu_log = [0] * max_runs
-            dev_log = [0] * max_runs
             # Reset the run count to zero.
             run_count = 0
             while run_count < max_runs:
@@ -349,20 +346,6 @@ for p in range(0, intervals):
                 clu_log[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                              luc, pas, act,
                                                              luc_count)
-                smap_ef = ef(luc, max_distance, cdl, cd, N, omap, smap, mask,
-                             rows, cols)
-                max_dev = 0
-                for d in range(0, max_distance):
-                    for i in range(0, luc):
-                        for j in range(0, luc):
-                            # Skip impossible conversions.
-                            if q > (act + pas - 1) and d == 0:
-                                pass
-                            dev = log10((smap_ef[d, i, j] + dev_const) /
-                                        (data_ef[d, i, j] + dev_const))
-                            if abs(dev) > abs(max_dev):
-                                max_dev = dev
-                dev_log[run_count] = max_dev
                 # Add 1 to iterator to avoid infinite loop.
                 run_count = run_count + 1
             # Log the output metrics in the dictionary.
@@ -372,15 +355,16 @@ for p in range(0, intervals):
                                                       len(kappa_sim_log))
             coarse_metrics[coarse_metrics_key].append(sum(clu_log) /
                                                       len(clu_log))
-            coarse_metrics[coarse_metrics_key].append(sum(dev_log) /
-                                                      len(dev_log))
 
 # Write the output to a csv file.
-metrics_output_file = output_path + case_study + "\\coarse_cal_output.csv"
-store = [0]*7
+metrics_output_file = (
+    output_path + case_study + "\\" + case_study +
+    "_final_cal_output.csv"
+)
+store = [0]*6
 with open (metrics_output_file, "w", newline='') as csv_file:
     writer = csv.writer(csv_file)
-    values = ["theta_st", "theta_cp", "theta_it", "FK", "FKS", "CLU", "Dev"]
+    values = ["theta_st", "theta_cp", "theta_it", "FK", "FKS", "CLU"]
     writer.writerow(values)
     for p in range(0, intervals):
         for q in range(0, intervals):
@@ -396,6 +380,11 @@ with open (metrics_output_file, "w", newline='') as csv_file:
                 store[3] = coarse_metrics[coarse_metrics_key][0]
                 store[4] = coarse_metrics[coarse_metrics_key][1]
                 store[5] = coarse_metrics[coarse_metrics_key][2]
-                store[6] = coarse_metrics[coarse_metrics_key][3]
                 writer.writerow(store)
+
+# Indicate completion with a beep
+import winsound
+Freq = 2500
+Dur = 1000
+winsound.Beep(Freq, Dur)
 # Finished!
