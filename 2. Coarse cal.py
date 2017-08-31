@@ -39,7 +39,7 @@ from math import log10
 # base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
 base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
 # Set the case study
-case_study = "Lisbon"
+case_study = "Berlin"
 # Set the paths to the directories and relevant data
 data_path = base_path + "EU_data\\"
 output_path = base_path + "EU_output\\"
