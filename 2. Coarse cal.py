@@ -36,7 +36,8 @@ from math import log10
 
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
-base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
+# base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
+base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
 # Set the case study
 case_study = "Lisbon"
 # Set the paths to the directories and relevant data
@@ -97,7 +98,8 @@ for c in range(0, max_distance):
     N.append(N_all[c])
 
 # Set the working directory, which contains the geoproject file.
-working_directory = ("C:\\Geonamica\\Metronamica\\" + case_study)
+# working_directory = ("C:\\Geonamica\\Metronamica\\" + case_study)
+working_directory = "C:\\Users\\a1210607\\Geonamica\\Metronamica\\" + case_study
 # Set the project file path.
 project_file = working_directory + "\\" + case_study + ".geoproj"
 # Set the path to the command line version of Geonamica
@@ -203,7 +205,7 @@ for p in range(0, intervals):
     print("Theta self-influence tail value: " + str(theta_st))
     for q in range(0, intervals):
         theta_cp = theta_cp_values[q]
-        print("Theta conversion point tail value: " + str(theta_cp))
+        print("Theta conversion point value: " + str(theta_cp))
         for r in range(0, intervals):
             theta_it = theta_it_values[r]
             print("Theta interactive tail value: " + str(theta_it))
@@ -375,7 +377,7 @@ for p in range(0, intervals):
             coarse_metrics[coarse_metrics_key].append(sum(dev_log) /
                                                       len(dev_log))
 
-# Write the output to a csv file.
+# Write the output metrics to a csv file.
 metrics_output_file = output_path + case_study + "\\coarse_cal_output.csv"
 store = [0]*7
 with open (metrics_output_file, "w", newline='') as csv_file:

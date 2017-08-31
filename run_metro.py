@@ -25,4 +25,3 @@ def run_metro(project_file, log_file, working_directory, geo_cmd):
     for line in p2.stdout.readlines():
         print(line)
     retval = p2.wait()
-
