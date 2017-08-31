@@ -31,8 +31,8 @@ import csv
 
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
-# base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
-base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
+base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
+# base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
 # Set the case study
 case_study = "Lisbon"
 # Set the paths to the directories and relevant data
@@ -95,8 +95,8 @@ for c in range(0, max_distance):
 data_ef = ef(luc, max_distance, cdl, cd, N, omap, amap, mask, rows, cols)
 
 # Set the working directory, which contains the geoproject file.
-# working_directory = ("C:\\Geonamica\\Metronamica\\" + case_study)
-working_directory = "C:\\Users\\a1210607\\Geonamica\\Metronamica\\" + case_study
+working_directory = ("C:\\Geonamica\\Metronamica\\" + case_study)
+# working_directory = "C:\\Users\\a1210607\\Geonamica\\Metronamica\\" + case_study
 # Set the project file path.
 project_file = working_directory + "\\" + case_study + ".geoproj"
 # Set the path to the command line version of Geonamica
@@ -113,14 +113,14 @@ att_rule_file = output_path + case_study + "\\Rules\\att_rules.txt"
 att_rules = np.loadtxt(att_rule_file)
 
 # Generate the rules to seed the model with based on the specified meta-parameters.
-theta_st = 0.055
-theta_cp = 0.100
-theta_it = 0.005
+theta_st = 0.075
+theta_cp = 0.050
+theta_it = 0.0125
 rules = seed_rules(omap, amap, mask, max_distance, luc_names, luc, act, pas, 
                    att_rules, theta_st, theta_cp, theta_it, project_file)
 # Initialise an array to track the conversion points and distances.
-con_rules = np.zeros(shape=(luc,act))
-lim_rules = np.zeros(shape=(luc,act))
+con_rules = np.zeros(shape=(luc, act))
+lim_rules = np.zeros(shape=(luc, act))
 # Input the rules into the model, analyse the input points for inclusion.
 for i in range(0, luc):
     for j in range(0, act):
@@ -133,17 +133,17 @@ for i in range(0, luc):
         if i > (act + pas - 1):
             pass
         elif y0 > 0:
-            con_rules[i,j] = 1
+            con_rules[i, j] = 1
         y1 = rules[key][1]
         y2 = rules[key][2]
         xe = rules[key][3]
-        if att_rules[i,j] == 1:
-            lim_rules[i,j] = xe
+        if att_rules[i, j] == 1:
+            lim_rules[i, j] = xe
         set_lp_rule(project_file, fu_elem, lu_elem, y0, y1, y2, xe)
 
 # Set the fixed parameters for iterative testing.
 counter = 0
-total_iterations = 50
+total_iterations = 1000
 c = 0.25
 # Set the base random number seed
 base_seed = 1000
@@ -156,7 +156,7 @@ old_index = [0, 0, 0]
 max_influence = 100
 min_influence = 0
 # Initialise a matrix to track rule adjustment
-rule_tracker = np.zeros(shape=(total_iterations, 5))
+rule_tracker = np.zeros(shape=(total_iterations, 6))
 # Track the start of the calibration.
 start = time.time()
 
@@ -239,6 +239,7 @@ while counter < total_iterations:
     rule_tracker[counter, 2] = adj_index
     rule_tracker[counter, 3] = rules[rule_key][adj_index]
     rule_tracker[counter, 4] = max_value
+    rule_tracker[counter, 5] = ksim(omap, amap, smap, mask)
     # Update the old index for the previous iteration scaling.
     old_index = index
     # Add one to the iterations of testing counter.
@@ -284,7 +285,7 @@ store = [0]*6
 with open(log_file, "w", newline='') as csv_file:
     writer = csv.writer(csv_file)
     # Write a header line to the file
-    values = ["from", "to", "distance", "new value", "max deviation"]
+    values = ["from", "to", "distance", "new value", "max deviation", "KSIM"]
     writer.writerow(values)
     # Now write the output
     for i in range(0, total_iterations):
@@ -293,6 +294,7 @@ with open(log_file, "w", newline='') as csv_file:
         store[2] = rule_tracker[i, 2]
         store[3] = rule_tracker[i, 3]
         store[4] = rule_tracker[i, 4]
+        store[5] = rule_tracker[i, 5]
         writer.writerow(store)
 
 

@@ -36,8 +36,8 @@ from math import log10
 
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
-# base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
-base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
+base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
+# base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
 # Set the case study
 case_study = "Berlin"
 # Set the paths to the directories and relevant data
@@ -82,7 +82,6 @@ for i in range(0, rows):
     for j in range(0, cols):
         if mask[i, j] > 0:
             luc_count[amap[i, j]] = luc_count[amap[i, j]] + 1
-
 
 # Determine the distances that will be analysed using the module considered
 # distances.
@@ -358,18 +357,16 @@ for p in range(0, intervals):
             coarse_metrics[coarse_metrics_key].append(sum(clu_log) /
                                                       len(clu_log))
 
-<<<<<<< HEAD
 # Write the output metrics to a csv file.
 metrics_output_file = output_path + case_study + "\\coarse_cal_output.csv"
 store = [0]*7
-=======
+
 # Write the output to a csv file.
 metrics_output_file = (
     output_path + case_study + "\\" + case_study +
     "_final_cal_output.csv"
 )
 store = [0]*6
->>>>>>> fe16ff7d5112a8b59b0d3499d9f98e262e8e5d07
 with open (metrics_output_file, "w", newline='') as csv_file:
     writer = csv.writer(csv_file)
     values = ["theta_st", "theta_cp", "theta_it", "FK", "FKS", "CLU"]
