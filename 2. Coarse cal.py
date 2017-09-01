@@ -358,13 +358,15 @@ for p in range(0, intervals):
                                                       len(clu_log))
 
 # Write the output metrics to a csv file.
-metrics_output_file = output_path + case_study + "\\coarse_cal_output.csv"
+metrics_output_file = (output_path + case_study + 
+    "Meta_cal_output\\coarse_cal_output.csv")
+
 store = [0]*7
 
 # Write the output to a csv file.
 metrics_output_file = (
     output_path + case_study + "\\" + case_study +
-    "_final_cal_output.csv"
+    "_coarse_cal_output.csv"
 )
 store = [0]*6
 with open (metrics_output_file, "w", newline='') as csv_file:
