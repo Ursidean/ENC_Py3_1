@@ -36,8 +36,10 @@ from math import log10
 
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
-base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
-# base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
+
+# base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
+base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
+
 # Set the case study
 case_study = "Berlin"
 # Set the paths to the directories and relevant data
@@ -97,8 +99,10 @@ for c in range(0, max_distance):
     N.append(N_all[c])
 
 # Set the working directory, which contains the geoproject file.
+
 # working_directory = ("C:\\Geonamica\\Metronamica\\" + case_study)
 working_directory = "C:\\Users\\a1210607\\Geonamica\\Metronamica\\" + case_study
+
 # Set the project file path.
 project_file = working_directory + "\\" + case_study + ".geoproj"
 # Set the path to the command line version of Geonamica
@@ -162,12 +166,12 @@ base_seed = 1000
 max_runs = 1
 # Specify the minimum, maximum, and number of intervals to be tested for the
 # meta-parameter values (theta).
-min_theta_st = 0.0875
+min_theta_st = 0.000
 max_theta_st = 0.100
-min_theta_cp = 0.0125
-max_theta_cp = 0.0375
-min_theta_it = 0.0125
-max_theta_it = 0.015625
+min_theta_cp = 0.000
+max_theta_cp = 0.100
+min_theta_it = 0.000
+max_theta_it = 0.050
 intervals = 5
 
 # Generate a list of meta-parameter values to test.
@@ -359,16 +363,10 @@ for p in range(0, intervals):
 
 # Write the output metrics to a csv file.
 metrics_output_file = (output_path + case_study + 
-    "Meta_cal_output\\coarse_cal_output.csv")
-
-store = [0]*7
-
-# Write the output to a csv file.
-metrics_output_file = (
-    output_path + case_study + "\\" + case_study +
-    "_coarse_cal_output.csv"
-)
+    "\\Meta_cal_output\\coarse_cal_output.csv")
+# Generate an empty list to store metric values.
 store = [0]*6
+# Write to csv file.
 with open (metrics_output_file, "w", newline='') as csv_file:
     writer = csv.writer(csv_file)
     values = ["theta_st", "theta_cp", "theta_it", "FK", "FKS", "CLU"]
