@@ -22,24 +22,19 @@ from set_NR import set_lp_rule
 from set_rand import set_rand
 # Run the Metronamica model.
 from run_metro import run_metro
-# Calculate the Kappa metric
-from kappa import kappa
-# Calculate the Kappa Simulation metric
-from kappa import ksim
+# Import the Map Comparison Library for calculation of Fuzzy Kappa and FKS.
+import mcl
 # Calculate the area-weighted clumpiness error.
 from area_weighted_clu import area_weighted_clu_error
 # Interact with csv files.
 import csv
-# Scale to log base 10
-from math import log10
-
 
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
 base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
 # base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
 # Set the case study
-case_study = "Berlin"
+case_study = "Madrid"
 # Set the paths to the directories and relevant data
 data_path = base_path + "EU_data\\"
 output_path = base_path + "EU_output\\"
@@ -49,6 +44,11 @@ omap_path = data_path + case_study + "\\" + case_study.lower() + "_1990.asc"
 amap_path = data_path + case_study + "\\" + case_study.lower() + "_2000.asc"
 # Specify the masking map.
 mask_path = data_path + case_study + "\\" + case_study.lower() + "_mask.asc"
+# Specify the fuzzy weights for the calculation of fuzzy Kappa.
+fuzzy_coefficients = data_path + "coeff13.txt"
+# Specify the fuzzy transition weights for the calculation of FKS.
+fuzzy_trans_coefficients = data_path + "coefficients13.txt"
+
 # Set the land-use class names.
 luc_names = ["Natural areas", "Arable land", "Permanent crops", "Pastures",
              "Agricultural areas", "Residential", "Industry & commerce",
@@ -97,8 +97,8 @@ for c in range(0, max_distance):
     N.append(N_all[c])
 
 # Set the working directory, which contains the geoproject file.
-# working_directory = ("C:\\Geonamica\\Metronamica\\" + case_study)
-working_directory = "C:\\Users\\a1210607\\Geonamica\\Metronamica\\" + case_study
+working_directory = ("C:\\Geonamica\\Metronamica\\" + case_study)
+# working_directory = "C:\\Users\\a1210607\\Geonamica\\Metronamica\\" + case_study
 # Set the project file path.
 project_file = working_directory + "\\" + case_study + ".geoproj"
 # Set the path to the command line version of Geonamica
@@ -159,235 +159,289 @@ for i in range(0, act):
 # Set the base random number seed.
 base_seed = 1000
 # Set the number of simulation runs per iteration.
-max_runs = 1
-# Specify the minimum, maximum, and number of intervals to be tested for the
-# meta-parameter values (theta).
-min_theta_st = 0.0875
-max_theta_st = 0.100
-min_theta_cp = 0.0125
-max_theta_cp = 0.0375
-min_theta_it = 0.0125
-max_theta_it = 0.015625
-intervals = 5
+max_runs = 10
 
-# Generate a list of meta-parameter values to test.
-theta_st_values = []
-theta_cp_values = []
-theta_it_values = []
-for i in range(0, intervals):
-    st_range = i * (max_theta_st - min_theta_st) / (intervals - 1)
-    theta_st_values.append(min_theta_st + st_range)
-    cp_range = i * (max_theta_cp - min_theta_cp) / (intervals - 1)
-    theta_cp_values.append(min_theta_cp + cp_range)
-    it_range = i * (max_theta_it - min_theta_it) / (intervals - 1)
-    theta_it_values.append(min_theta_it + it_range)
-
+# Set the varied parameter. Must be one of theta_st, theta_cp or theta_it
+vp = "theta_it"
+# Set the fixed parameters.
+if vp == "theta_st":
+    # Default fixed values.
+    theta_cp = 0.025
+    theta_it = 0.005
+elif vp == "theta_cp":
+    # Value set by user.
+    theta_st = 0.040
+    # Default fixed value.
+    theta_it = 0.005
+elif vp == "theta_it":
+    # Values set by user.
+    theta_st = 0.040
+    theta_cp = 0.030
 # Initialise a dictionary to store metric values.
 coarse_metrics = {}
+# Set the range and interval size for the selected parameter.
+min_value = 0.000
+max_value = 0.020
+interval_size = 0.001
+# Generate a list of values to test.
+testing_range = []
+testing_pts = max_value / interval_size
+for i in range(0, int(testing_pts + 1)):
+    temp = i * (max_value - min_value) / testing_pts
+    testing_range.append(temp)
+    coarse_metrics[temp] = []
 
-# Initialise the map comparison library for the calculation of Fuzzy Kappa.
-"""
-fuzzy_coefficients = ("C:\\Users\\charl\\OneDrive\\Documents\\ENC_Py3_1\\"
-                      "coeff.txt")
-analysis_id = mcl.createAnalysis()
-mcl.loadMapActual(analysis_id, amap_path)
-mcl.loadMaskingMap(analysis_id, mask_path)
-mcl.loadFuzzyWeights(analysis_id, fuzzy_coefficients)
-"""
+# Initialise the analysis for the Fuzzy Kappa.
+analysis_id_fk = mcl.createAnalysis()
+# Initialise the analysis for the Fuzzy Kappa Simulation.
+analysis_id_fks = mcl.createAnalysis()
+# Load the original map for the analysis of FK.
+mcl.loadOriginalMap(analysis_id_fks, omap_path)
+# Load the actual map for the analysis of FK and FKS.
+mcl.loadMapActual(analysis_id_fk, amap_path)
+mcl.loadMapActual(analysis_id_fks, amap_path)
+# Load the fuzzy weights for Fuzzy Kappa.
+mcl.loadFuzzyWeights(analysis_id_fk, fuzzy_coefficients)
+# Load the fuzzy transition weights for FKS.
+mcl.loadTransitionFuzzyWeights(analysis_id_fks, fuzzy_trans_coefficients)
+
+
+
+
+# Initialise a dictionary to store the rule values.
+rules = {}
+# Rules are indexed by the land-use classes specified. The format is:
+# Influence at a distance of 0;
+# Influence at a distance of 1;
+# Influence at a distance of 2; and
+# Point of influence of 0 (by default the max_distance).
+
+for i in range(0, luc):
+    for j in range(0, act):
+        key = "from " + luc_names[i] + " to " + luc_names[j + pas]
+        rules[key] = [0, 0, 0, max_distance]
+
+# Output to user.
+print("Testing parameter: " + vp)
 
 # Perform the iterative testing.
-for p in range(0, intervals):
-    # Allocate the corresponding meta-parameter values.
-    theta_st = theta_st_values[p]
-    print("Theta self-influence tail value: " + str(theta_st))
-    for q in range(0, intervals):
-        theta_cp = theta_cp_values[q]
-        print("Theta conversion point value: " + str(theta_cp))
-        for r in range(0, intervals):
-            theta_it = theta_it_values[r]
-            print("Theta interactive tail value: " + str(theta_it))
-            # Specify a tuple as the coarse_metrics key
-            coarse_metrics_key = (theta_st, theta_cp, theta_it)
-            coarse_metrics[coarse_metrics_key] = []
-            # Set influence values at distance 1 for self-influence tails.
-            d1_high_st_value = high_inertia * theta_st
-            d1_mid_st_value = mid_inertia * theta_st
-            d1_low_st_value = low_inertia * theta_st
-            # Set influence values at distance 2 for self-influence tails.
-            d2_high_st_value = high_inertia * theta_st * 0.1
-            d2_mid_st_value = mid_inertia * theta_st * 0.1
-            d2_low_st_value = low_inertia * theta_st * 0.1
-            # Set the conversion parameter values.
-            high_conversion = high_inertia * theta_cp
-            mid_conversion = mid_inertia * theta_cp
-            low_conversion = low_inertia * theta_cp
-            # Set influence values at distance 1 for interaction tails.
-            d1_high_it_value = high_inertia * theta_it
-            d1_mid_it_value = mid_inertia * theta_it
-            d1_low_it_value = low_inertia * theta_it
-            # Set influence values at distance 2 for interaction tails.
-            d2_high_it_value = high_inertia * theta_it * 0.1
-            d2_mid_it_value = mid_inertia * theta_it * 0.1
-            d2_low_it_value = low_inertia * theta_it * 0.1
-            # Set the values for inertia and conversion.
-            for i in range(0, act):
-                for j in range(0, luc):
-                    # Specify the neighbourhood rule key.
-                    key = (
-                        "from " + luc_names[j] + " to " + luc_names[i + pas]
-                    )
-                    # If a self-influence rule, set the inertia value.
-                    if i + pas == j:
-                        if (cont_table[i + pas, luc] >
-                                cont_table[luc, i + pas]):
-                            rules[key][0] = low_inertia
-                        else:
-                            inertia_rate = ic_rates[j, i + pas]
-                            if inertia_rate > high_inertia_band:
-                                rules[key][0] = high_inertia
-                            elif inertia_rate > mid_inertia_band:
-                                rules[key][0] = mid_inertia
+for x in range(0, len(testing_range)):
+    if vp == "theta_st":
+        # Set the theta_st value from the testing list.
+        theta_st = testing_range[x]
+        # Calculate all the relevant meta-parameters.
+        # Set the tested parameter values for the self-influence tails.
+        d1_high_st_value = high_inertia * theta_st
+        d1_mid_st_value = mid_inertia * theta_st
+        d1_low_st_value = low_inertia * theta_st
+        # Set influence values at distance 2 for self-influence tails.
+        d2_high_st_value = high_inertia * theta_st * 0.1
+        d2_mid_st_value = mid_inertia * theta_st * 0.1
+        d2_low_st_value = low_inertia * theta_st * 0.1
+        # Set the conversion parameter values.
+        high_conversion = high_inertia * theta_cp
+        mid_conversion = mid_inertia * theta_cp
+        low_conversion = low_inertia * theta_cp
+        # Set influence values at distance 1 for interaction tails.
+        d1_high_it_value = high_inertia * theta_it
+        d1_mid_it_value = mid_inertia * theta_it
+        d1_low_it_value = low_inertia * theta_it
+        # Set influence values at distance 2 for interaction tails.
+        d2_high_it_value = high_inertia * theta_it * 0.1
+        d2_mid_it_value = mid_inertia * theta_it * 0.1
+        d2_low_it_value = low_inertia * theta_it * 0.1
+    elif vp == "theta_cp":
+        theta_cp = testing_range[x]
+        # Calculate all the relevant meta-parameters.
+        # Set the tested parameter values for the self-influence tails.
+        d1_high_st_value = high_inertia * theta_st
+        d1_mid_st_value = mid_inertia * theta_st
+        d1_low_st_value = low_inertia * theta_st
+        # Set influence values at distance 2 for self-influence tails.
+        d2_high_st_value = high_inertia * theta_st * 0.1
+        d2_mid_st_value = mid_inertia * theta_st * 0.1
+        d2_low_st_value = low_inertia * theta_st * 0.1
+        # Set the conversion parameter values.
+        high_conversion = high_inertia * theta_cp
+        mid_conversion = mid_inertia * theta_cp
+        low_conversion = low_inertia * theta_cp
+        # Set influence values at distance 1 for interaction tails.
+        d1_high_it_value = high_inertia * theta_it
+        d1_mid_it_value = mid_inertia * theta_it
+        d1_low_it_value = low_inertia * theta_it
+        # Set influence values at distance 2 for interaction tails.
+        d2_high_it_value = high_inertia * theta_it * 0.1
+        d2_mid_it_value = mid_inertia * theta_it * 0.1
+        d2_low_it_value = low_inertia * theta_it * 0.1
+    elif vp == "theta_it":
+        theta_it = testing_range[x]
+        # Calculate all the relevant meta-parameters.
+        # Set the tested parameter values for the self-influence tails.
+        d1_high_st_value = high_inertia * theta_st
+        d1_mid_st_value = mid_inertia * theta_st
+        d1_low_st_value = low_inertia * theta_st
+        # Set influence values at distance 2 for self-influence tails.
+        d2_high_st_value = high_inertia * theta_st * 0.1
+        d2_mid_st_value = mid_inertia * theta_st * 0.1
+        d2_low_st_value = low_inertia * theta_st * 0.1
+        # Set the conversion parameter values.
+        high_conversion = high_inertia * theta_cp
+        mid_conversion = mid_inertia * theta_cp
+        low_conversion = low_inertia * theta_cp
+        # Set influence values at distance 1 for interaction tails.
+        d1_high_it_value = high_inertia * theta_it
+        d1_mid_it_value = mid_inertia * theta_it
+        d1_low_it_value = low_inertia * theta_it
+        # Set influence values at distance 2 for interaction tails.
+        d2_high_it_value = high_inertia * theta_it * 0.1
+        d2_mid_it_value = mid_inertia * theta_it * 0.1
+        d2_low_it_value = low_inertia * theta_it * 0.1
+    # Provide user feedback.
+    print("Parameter value: " + str(testing_range[x]))
+    coarse_metrics_key = testing_range[x]
+    # Set the values for inertia and conversion.
+    for i in range(0, act):
+        for j in range(0, luc):
+            # Specify the neighbourhood rule key.
+            key = "from " + luc_names[j] + " to " + luc_names[i + pas]
+            # If a self-influence rule, set the inertia value.
+            if i + pas == j:
+                if cont_table[i + pas, luc] > cont_table[luc, i + pas]:
+                    rules[key][0] = low_inertia
+                else:
+                    inertia_rate = ic_rates[j, i + pas]
+                    if inertia_rate > high_inertia_band:
+                        rules[key][0] = high_inertia
+                    elif inertia_rate > mid_inertia_band:
+                        rules[key][0] = mid_inertia
+                    else:
+                        rules[key][0] = low_inertia
+            # If an interactive rule, set the conversion rule.
+            else:
+                conversion_rate = ic_rates[j, i + pas]
+                if conversion_rate > high_conversion_band:
+                    rules[key][0] = high_conversion
+                elif conversion_rate > mid_conversion_band:
+                    rules[key][0] = mid_conversion
+                elif conversion_rate > low_conversion_band:
+                    rules[key][0] = low_conversion
+    # Set the values for self-influence and conversion tails.
+    for i in range(0, act):
+        for j in range(0, luc):
+            # Specify the neighbourhood rule key.
+            key = "from " + luc_names[j] + " to " + luc_names[i + pas]
+            # If a self-influence rule, set the self-influence attraction values.
+            if i + pas == j:
+                for c in range(1, 3):
+                    if c == 1:
+                        if att_rules[j, i] == 1:
+                            if log_data_ef[c, j, i] > high_ef:
+                                rules[key][c] = d1_high_st_value
+                            elif log_data_ef[c, j, i] > mid_ef:
+                                rules[key][c] = d1_mid_st_value
                             else:
-                                rules[key][0] = low_inertia
-                    # If an interactive rule, set the conversion rule.
-                    else:
-                        conversion_rate = ic_rates[j, i + pas]
-                        if conversion_rate > high_conversion_band:
-                            rules[key][0] = high_conversion
-                        elif conversion_rate > mid_conversion_band:
-                            rules[key][0] = mid_conversion
-                        elif conversion_rate > low_conversion_band:
-                            rules[key][0] = low_conversion
-            # Set the values for self-influence and conversion tails.
-            for i in range(0, act):
-                for j in range(0, luc):
-                    # Specify the neighbourhood rule key.
-                    key = "from " + luc_names[j] + " to " + luc_names[i + pas]
-                    # If a self-influence rule, set the self-influence attraction values.
-                    if i + pas == j:
-                        for c in range(1, 3):
-                            if c == 1:
-                                if att_rules[j, i] == 1:
-                                    if log_data_ef[c, j, i] > high_ef:
-                                        rules[key][c] = d1_high_st_value
-                                    elif log_data_ef[c, j, i] > mid_ef:
-                                        rules[key][c] = d1_mid_st_value
-                                    else:
-                                        rules[key][c] = d1_low_st_value
-                            elif c == 2:
-                                if att_rules[j, i] == 1:
-                                    if log_data_ef[c, j, i] > high_ef:
-                                        rules[key][c] = d2_high_st_value
-                                    elif log_data_ef[c, j, i] > mid_ef:
-                                        rules[key][c] = d2_mid_st_value
-                                    else:
-                                        rules[key][c] = d2_low_st_value
-                    # If a conversion rule, set the interactive attraction values.
-                    else:
-                        if (
-                                            att_rules[j, i] == 1 and log_data_ef[1, j, i] > 0
-                                and log_data_ef[2, j, i] > 0
-                        ):
-                            for c in range(1, 3):
-                                if c == 1:
-                                    if log_data_ef[c, j, i] > high_ef:
-                                        rules[key][c] = d1_high_it_value
-                                    elif log_data_ef[c, j, i] > mid_ef:
-                                        rules[key][c] = d1_mid_it_value
-                                    elif log_data_ef[c, j, i] > 0:
-                                        rules[key][c] = d1_low_it_value
-                                elif c == 2:
-                                    if log_data_ef[c, j, i] > high_ef:
-                                        rules[key][c] = d2_high_it_value
-                                    elif log_data_ef[c, j, i] > mid_ef:
-                                        rules[key][c] = d2_mid_it_value
-                                    elif log_data_ef[c, j, i] > 0:
-                                        rules[key][c] = d2_low_it_value
-            # Set the end-points of each attraction rule
-            for i in range(0, act):
-                for j in range(0, luc):
-                    if att_rules[j, i] == 0:
-                        pass
-                    else:
-                        # Specify the neighbourhood rule key.
-                        key = "from " + luc_names[j] + " to " + luc_names[i + pas]
-                        # Iterate through to find end point
-                        for c in range(2, 5):
-                            if att_rules[j, i] == 1 and log_data_ef[c, j, i] > 0:
-                                rules[key][3] = c + 1
-            # Input the rules into the model.
-            for i in range(0, luc):
-                for j in range(0, act):
-                    key = "from " + luc_names[i] + " to " + luc_names[j + pas]
-                    fu_elem = j
-                    lu_elem = i
-                    y0 = rules[key][0]
-                    y1 = rules[key][1]
-                    y2 = rules[key][2]
-                    xe = rules[key][3]
-                    set_lp_rule(project_file, fu_elem, lu_elem, y0, y1, y2, xe)
-            # Generate the simulated output and record the results.
-            kappa_log = [0] * max_runs
-            kappa_sim_log = [0] * max_runs
-            clu_log = [0] * max_runs
-            # Reset the run count to zero.
-            run_count = 0
-            while run_count < max_runs:
-                print("Run: " + str(run_count))
-                # Generate seed, run model to generate output.
-                rseed = base_seed + run_count
-                set_rand(project_file, rseed)
-                run_metro(project_file, log_file, working_directory,
-                          geo_cmd)
-                # Read in the map.
-                smap = read_map(smap_path)
-                # Calculate the corresponding metrics
-                kappa_log[run_count] = kappa(amap, smap, mask)
-                kappa_sim_log[run_count] = ksim(omap, amap, smap, mask)
-                clu_log[run_count] = area_weighted_clu_error(amap, smap, mask,
-                                                             luc, pas, act,
-                                                             luc_count)
-                # Add 1 to iterator to avoid infinite loop.
-                run_count = run_count + 1
-            # Log the output metrics in the dictionary.
-            coarse_metrics[coarse_metrics_key].append(sum(kappa_log) /
-                                                      len(kappa_log))
-            coarse_metrics[coarse_metrics_key].append(sum(kappa_sim_log) /
-                                                      len(kappa_sim_log))
-            coarse_metrics[coarse_metrics_key].append(sum(clu_log) /
-                                                      len(clu_log))
+                                rules[key][c] = d1_low_st_value
+                    elif c == 2:
+                        if att_rules[j, i] == 1:
+                            if log_data_ef[c, j, i] > high_ef:
+                                rules[key][c] = d2_high_st_value
+                            elif log_data_ef[c, j, i] > mid_ef:
+                                rules[key][c] = d2_mid_st_value
+                            else:
+                                rules[key][c] = d2_low_st_value
+            # If a conversion rule, set the interactive attraction values.
+            else:
+                if (
+                    att_rules[j, i] == 1 and log_data_ef[1, j, i] > 0
+                    and log_data_ef[2, j, i] > 0
+                ):
+                    for c in range(1, 3):
+                        if c == 1:
+                            if log_data_ef[c, j, i] > high_ef:
+                                rules[key][c] = d1_high_it_value
+                            elif log_data_ef[c, j, i] > mid_ef:
+                                rules[key][c] = d1_mid_it_value
+                            elif log_data_ef[c, j, i] > 0:
+                                rules[key][c] = d1_low_it_value
+                        elif c == 2:
+                            if log_data_ef[c, j, i] > high_ef:
+                                rules[key][c] = d2_high_it_value
+                            elif log_data_ef[c, j, i] > mid_ef:
+                                rules[key][c] = d2_mid_it_value
+                            elif log_data_ef[c, j, i] > 0:
+                                rules[key][c] = d2_low_it_value
+    # Set the end-points of each attraction rule
+    for i in range(0, act):
+        for j in range(0, luc):
+            if att_rules[j, i] == 0:
+                pass
+            else:
+                # Specify the neighbourhood rule key.
+                key = "from " + luc_names[j] + " to " + luc_names[i + pas]
+                # Iterate through to find end point
+                for c in range(2, 5):
+                    if att_rules[j, i] == 1 and log_data_ef[c, j, i] > 0:
+                        rules[key][3] = c + 1
+    # Input the rules into the model.
+    for i in range(0, luc):
+        for j in range(0, act):
+            key = "from " + luc_names[i] + " to " + luc_names[j + pas]
+            fu_elem = j
+            lu_elem = i
+            y0 = rules[key][0]
+            y1 = rules[key][1]
+            y2 = rules[key][2]
+            xe = rules[key][3]
+            set_lp_rule(project_file, fu_elem, lu_elem, y0, y1, y2, xe)
+    # Generate the simulated output and record the results.
+    fuzzy_kappa_log = [0] * max_runs
+    fks_log = [0] * max_runs
+    clu_log = [0] * max_runs
+    # Reset the run count to zero.
+    run_count = 0
+    while run_count < max_runs:
+        print("Run: " + str(run_count))
+        # Generate seed, run model to generate output.
+        rseed = base_seed + run_count
+        set_rand(project_file, rseed)
+        run_metro(project_file, log_file, working_directory,
+                    geo_cmd)
+        # Read in the map.
+        smap = read_map(smap_path)
+        # Read in the map for analysis of fuzzy kappa.
+        mcl.loadMapSimulated(analysis_id_fk, smap_path)
+        # Read in the map for analysis of fuzzy Kappa Simulation.
+        mcl.loadMapSimulated(analysis_id_fks, smap_path)
+        # Calculate the corresponding metrics
+        fuzzy_kappa_log[run_count] = mcl.getFuzzyKappa(analysis_id_fk)
+        fks_log[run_count] = mcl.getFuzzyKappaSim(analysis_id_fks)
+        clu_log[run_count] = area_weighted_clu_error(amap, smap, mask,
+                                                        luc, pas, act,
+                                                        luc_count)
+        # Add 1 to iterator to avoid infinite loop.
+        run_count = run_count + 1
+    # Log the output metrics in the dictionary.
+    coarse_metrics[coarse_metrics_key].append(sum(fuzzy_kappa_log) /
+                                              len(fuzzy_kappa_log))
+    coarse_metrics[coarse_metrics_key].append(sum(fks_log) /
+                                              len(fks_log))
+    coarse_metrics[coarse_metrics_key].append(sum(clu_log) / len(clu_log))
 
 # Write the output metrics to a csv file.
-metrics_output_file = (output_path + case_study + 
-    "Meta_cal_output\\coarse_cal_output.csv")
-
-store = [0]*7
-
-# Write the output to a csv file.
-metrics_output_file = (
-    output_path + case_study + "\\" + case_study +
-    "_coarse_cal_output.csv"
-)
-store = [0]*6
+metrics_output_file = (output_path + case_study + "\\Meta_cal_output\\" + 
+                       vp + "_coarse_cal_output.csv")
+store = [0]*4
 with open (metrics_output_file, "w", newline='') as csv_file:
     writer = csv.writer(csv_file)
-    values = ["theta_st", "theta_cp", "theta_it", "FK", "FKS", "CLU"]
+    values = [vp, "FK", "FKS", "CLU"]
     writer.writerow(values)
-    for p in range(0, intervals):
-        for q in range(0, intervals):
-            for r in range(0, intervals):
-                theta_st = theta_st_values[p]
-                theta_cp = theta_cp_values[q]
-                theta_it = theta_it_values[r]
-                store[0] = theta_st
-                store[1] = theta_cp
-                store[2] = theta_it
-                # Specify a tuple as the coarse_metrics key
-                coarse_metrics_key = (theta_st, theta_cp, theta_it)
-                store[3] = coarse_metrics[coarse_metrics_key][0]
-                store[4] = coarse_metrics[coarse_metrics_key][1]
-                store[5] = coarse_metrics[coarse_metrics_key][2]
-                writer.writerow(store)
+    for x in range(0, len(testing_range)):
+        store[0] = testing_range[x]
+        coarse_metrics_key = testing_range[x]
+        store[1] = coarse_metrics[coarse_metrics_key][0]
+        store[2] = coarse_metrics[coarse_metrics_key][1]
+        store[3] = coarse_metrics[coarse_metrics_key][2]
+        writer.writerow(store)
 
 # Indicate completion with a beep
 import winsound

@@ -112,12 +112,38 @@ smap_path = (
 att_rule_file = output_path + case_study + "\\Rules\\att_rules.txt"
 att_rules = np.loadtxt(att_rule_file)
 
-# Generate the rules to seed the model with based on the specified meta-parameters.
-theta_st = 0.075
-theta_cp = 0.050
-theta_it = 0.0125
-rules = seed_rules(omap, amap, mask, max_distance, luc_names, luc, act, pas, 
-                   att_rules, theta_st, theta_cp, theta_it, project_file)
+# Generate the rules in one of two ways. Rules can either be generated
+# by seeding the model with the specified meta-parameters, or read in
+# the rules from a csv file.
+seed = True
+if seed == True:
+    theta_st = 0.075
+    theta_cp = 0.050
+    theta_it = 0.0125
+    rules = seed_rules(omap, amap, mask, max_distance, luc_names, luc, act, pas,
+                       att_rules, theta_st, theta_cp, theta_it, project_file)
+else:
+    # If false read the rules from an input file.
+    initial_rule_file = (output_path + "\\" + case_study + 
+                         "\\Rules\\initial_rules.csv")
+    # Initialise a dictionary for storing rule values.
+    rules = {}
+    for i in range(0, luc):
+        for j in range(0, act):
+            key = "from " + luc_names[i] + " to " + luc_names[j + pas]
+            rules[key] = [0] * 4
+    # Read inputs from csv file
+    with open(initial_rule_file, 'r', newline='') as f:
+        readCSV = csv.reader(f)
+        next(f)  # This skips the header line
+        for row in readCSV:
+            i = row[0]
+            j = row[1]
+            key = "from " + i + " to " + j
+            rules[key][0] = float(row[2])
+            rules[key][1] = float(row[3])
+            rules[key][2] = float(row[4])
+            rules[key][3] = float(row[5])
 # Initialise an array to track the conversion points and distances.
 con_rules = np.zeros(shape=(luc, act))
 lim_rules = np.zeros(shape=(luc, act))
@@ -143,7 +169,7 @@ for i in range(0, luc):
 
 # Set the fixed parameters for iterative testing.
 counter = 0
-total_iterations = 1000
+total_iterations = 51
 c = 0.25
 # Set the base random number seed
 base_seed = 1000
