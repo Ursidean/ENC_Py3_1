@@ -32,7 +32,6 @@ import csv
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
 base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
-# base_path = "C:\\Users\\a1210607\\ENC_Py3_1\\"
 # Set the case study
 case_study = "Madrid"
 # Set the paths to the directories and relevant data
@@ -98,7 +97,6 @@ for c in range(0, max_distance):
 
 # Set the working directory, which contains the geoproject file.
 working_directory = ("C:\\Geonamica\\Metronamica\\" + case_study)
-# working_directory = "C:\\Users\\a1210607\\Geonamica\\Metronamica\\" + case_study
 # Set the project file path.
 project_file = working_directory + "\\" + case_study + ".geoproj"
 # Set the path to the command line version of Geonamica
@@ -160,7 +158,6 @@ for i in range(0, act):
 base_seed = 1000
 # Set the number of simulation runs per iteration.
 max_runs = 10
-
 # Set the varied parameter. Must be one of theta_st, theta_cp or theta_it
 vp = "theta_it"
 # Set the fixed parameters.
@@ -204,9 +201,6 @@ mcl.loadMapActual(analysis_id_fks, amap_path)
 mcl.loadFuzzyWeights(analysis_id_fk, fuzzy_coefficients)
 # Load the fuzzy transition weights for FKS.
 mcl.loadTransitionFuzzyWeights(analysis_id_fks, fuzzy_trans_coefficients)
-
-
-
 
 # Initialise a dictionary to store the rule values.
 rules = {}
@@ -431,6 +425,7 @@ for x in range(0, len(testing_range)):
 metrics_output_file = (output_path + case_study + "\\Meta_cal_output\\" + 
                        vp + "_coarse_cal_output.csv")
 store = [0]*4
+# Write to csv file.
 with open (metrics_output_file, "w", newline='') as csv_file:
     writer = csv.writer(csv_file)
     values = [vp, "FK", "FKS", "CLU"]

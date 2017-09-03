@@ -2,25 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="81ee60d5-b01f-4d09-918a-aba7dd814979" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/MapComparisonLib.dll" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/MapComparisonLib.lib" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/_mcl.dll" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/_mcl.lib" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/_mcl.pyd" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/boost_filesystem-vc140-mt-1_65.dll" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/boost_system-vc140-mt-1_65.dll" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gdal202.dll" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/mcl.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/test.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/EU_data/Kappa coefficients.xlsx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/EU_output/Berlin/Meta_cal_output/Berlin_coarse_cal_output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/EU_output/Madrid/Meta_cal_output/Madrid_coarse_cal_output.csv" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/EU_output/Lisbon/Meta_cal_output/Processed output.xlsx" afterPath="$PROJECT_DIR$/EU_output/Lisbon/Meta_cal_output/Processed output.xlsx" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/EU_output/Berlin/Meta_cal_output/coarse_cal_output.csv" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/EU_output/Budapest/Meta_cal_output/coarse_cal_output.csv" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/EU_output/Madrid/Meta_cal_output/coarse_cal_output.csv" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/EU_output/Budapest/Meta_cal_output/Budapest_coarse_cal_output.csv" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/2. Coarse cal.py" afterPath="$PROJECT_DIR$/2. Coarse cal.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/3. Fine cal.py" afterPath="$PROJECT_DIR$/3. Fine cal.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/EU_output/Lisbon/Lisbon_fine_tuning_output.csv" afterPath="$PROJECT_DIR$/EU_output/Lisbon/Lisbon_fine_tuning_output.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/EU_output/Lisbon/Rules/final_rules.csv" afterPath="$PROJECT_DIR$/EU_output/Lisbon/Rules/final_rules.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/EU_output/Lisbon/duration.txt" afterPath="$PROJECT_DIR$/EU_output/Lisbon/duration.txt" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -41,8 +30,8 @@
       <file leaf-file-name="2. Coarse cal.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/2. Coarse cal.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="268">
-              <caret line="182" column="17" lean-forward="true" selection-start-line="182" selection-start-column="17" selection-end-line="182" selection-end-column="17" />
+            <state relative-caret-position="657">
+              <caret line="446" column="0" lean-forward="true" selection-start-line="446" selection-start-column="0" selection-end-line="446" selection-end-column="0" />
               <folding>
                 <element signature="e#235#253#0" expanded="true" />
               </folding>
@@ -117,7 +106,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -129,7 +118,7 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -280,13 +269,13 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32990867" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32990867" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32990867" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -310,6 +299,16 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/2. Coarse cal.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#235#253#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/2. Coarse cal.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -378,8 +377,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/2. Coarse cal.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="268">
-          <caret line="182" column="17" lean-forward="true" selection-start-line="182" selection-start-column="17" selection-end-line="182" selection-end-column="17" />
+        <state relative-caret-position="657">
+          <caret line="446" column="0" lean-forward="true" selection-start-line="446" selection-start-column="0" selection-end-line="446" selection-end-column="0" />
           <folding>
             <element signature="e#235#253#0" expanded="true" />
           </folding>
