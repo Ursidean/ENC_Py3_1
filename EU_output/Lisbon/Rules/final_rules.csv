@@ -8,9 +8,9 @@ Natural areas,Industry & commerce,25.0,3.125,0.3125,5
 Natural areas,Recreation areas,25.0,6.25,0.625,5
 Natural areas,Forest,50.0,12.5,0.625,5
 Arable land,Arable land,500.0,18.75,1.875,5
-Arable land,Permanent crops,56.0,3.125,0.3125,4
-Arable land,Pastures,190.0,6.25,0.625,5
-Arable land,Agricultural areas,95.0,3.125,0.3125,5
+Arable land,Permanent crops,25.0,3.125,0.3125,4
+Arable land,Pastures,177.0,6.25,0.625,5
+Arable land,Agricultural areas,25.0,3.125,0.3125,5
 Arable land,Residential,25.0,0,0,5
 Arable land,Industry & commerce,25.0,3.125,0.3125,5
 Arable land,Recreation areas,0,0,0,5
@@ -25,7 +25,7 @@ Permanent crops,Recreation areas,12.5,0,0,5
 Permanent crops,Forest,0,0,0,5
 Pastures,Arable land,50.0,12.5,1.25,5
 Pastures,Permanent crops,0,0,0,5
-Pastures,Pastures,250.0,18.75,13.389999999999993,5
+Pastures,Pastures,250.0,18.75,8.87,5
 Pastures,Agricultural areas,0,0,0,5
 Pastures,Residential,0,0,0,5
 Pastures,Industry & commerce,0,0,0,5
@@ -61,7 +61,7 @@ Recreation areas,Pastures,0,0,0,5
 Recreation areas,Agricultural areas,0,0,0,5
 Recreation areas,Residential,0,3.125,0.3125,5
 Recreation areas,Industry & commerce,0,3.125,0.3125,5
-Recreation areas,Recreation areas,1000.0,21.4,3.75,5
+Recreation areas,Recreation areas,1000.0,37.5,3.75,5
 Recreation areas,Forest,0,0,0,5
 Forest,Arable land,25.0,0,0,5
 Forest,Permanent crops,25.0,0,0,5
@@ -75,7 +75,7 @@ Road & rail,Arable land,0,0,0,5
 Road & rail,Permanent crops,0,0,0,5
 Road & rail,Pastures,0,0,0,5
 Road & rail,Agricultural areas,0,0,0,5
-Road & rail,Residential,0,31.750000000000004,21.095,5
+Road & rail,Residential,0,31.750000000000004,0.625,5
 Road & rail,Industry & commerce,0,0,0,5
 Road & rail,Recreation areas,0,6.25,11.48,5
 Road & rail,Forest,0,0,0,5
