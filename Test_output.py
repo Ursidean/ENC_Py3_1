@@ -28,12 +28,14 @@ import mcl
 from area_weighted_clu import area_weighted_clu_error
 # Interact with csv files.
 import csv
+# Copy files.
+from shutil import copyfile
 
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
 base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
 # Set the case study
-case_study = "Lisbon"
+case_study = "Berlin"
 # Set the paths to the directories and relevant data
 data_path = base_path + "EU_data\\"
 output_path = base_path + "EU_output\\"
@@ -44,9 +46,9 @@ amap_path = data_path + case_study + "\\" + case_study.lower() + "_2000.asc"
 # Specify the masking map.
 mask_path = data_path + case_study + "\\" + case_study.lower() + "_mask.asc"
 # Specify the fuzzy weights for the calculation of fuzzy Kappa.
-fuzzy_coefficients = data_path + "coeff14.txt"
+fuzzy_coefficients = data_path + "coeff13.txt"
 # Specify the fuzzy transition weights for the calculation of FKS.
-fuzzy_trans_coefficients = data_path + "coefficients14.txt"
+fuzzy_trans_coefficients = data_path + "coefficients13.txt"
 
 # Set the land-use class names.
 luc_names = ["Natural areas", "Arable land", "Permanent crops", "Pastures",
@@ -157,38 +159,29 @@ for i in range(0, act):
 # Set the base random number seed.
 base_seed = 1000
 # Set the number of simulation runs per iteration.
-max_runs = 10
+max_runs = 1
 # Set the varied parameter. Must be one of theta_st, theta_cp or theta_it
-vp = "theta_it"
+vp = "theta_st"
 # Set the fixed parameters.
 if vp == "theta_st":
     # Default fixed values.
     theta_cp = 0.025
     theta_it = 0.005
-    # Set the range and interval size for the selected parameter.
-    min_value = 0.000
-    max_value = 0.100
-    interval_size = 0.005
 elif vp == "theta_cp":
     # Value set by user.
-    theta_st = 0.090
+    theta_st = 0.040
     # Default fixed value.
     theta_it = 0.005
-    # Set the range and interval size for the selected parameter.
-    min_value = 0.000
-    max_value = 0.050
-    interval_size = 0.0025
 elif vp == "theta_it":
     # Values set by user.
-    theta_st = 0.065
-    theta_cp = 0.0375
-# Set the range and interval size for the selected parameter.
-    min_value = 0.000
-    max_value = 0.020
-    interval_size = 0.001
+    theta_st = 0.040
+    theta_cp = 0.030
 # Initialise a dictionary to store metric values.
 coarse_metrics = {}
-
+# Set the range and interval size for the selected parameter.
+min_value = 0.000
+max_value = 0.100
+interval_size = 0.005
 # Generate a list of values to test.
 testing_range = []
 testing_pts = max_value / interval_size
@@ -196,6 +189,20 @@ for i in range(0, int(testing_pts + 1)):
     temp = i * (max_value - min_value) / testing_pts
     testing_range.append(temp)
     coarse_metrics[temp] = []
+
+# Initialise the analysis for the Fuzzy Kappa.
+analysis_id_fk = mcl.createAnalysis()
+# Initialise the analysis for the Fuzzy Kappa Simulation.
+analysis_id_fks = mcl.createAnalysis()
+# Load the original map for the analysis of FK.
+mcl.loadOriginalMap(analysis_id_fks, omap_path)
+# Load the actual map for the analysis of FK and FKS.
+mcl.loadMapActual(analysis_id_fk, amap_path)
+mcl.loadMapActual(analysis_id_fks, amap_path)
+# Load the fuzzy weights for Fuzzy Kappa.
+mcl.loadFuzzyWeights(analysis_id_fk, fuzzy_coefficients)
+# Load the fuzzy transition weights for FKS.
+mcl.loadTransitionFuzzyWeights(analysis_id_fks, fuzzy_trans_coefficients)
 
 # Initialise a dictionary to store the rule values.
 rules = {}
@@ -212,6 +219,16 @@ for i in range(0, luc):
 
 # Output to user.
 print("Testing parameter: " + vp)
+
+# Specify raster data paths.
+rdc_path = (
+    working_directory + "\\Log\\Land_use\\"
+                        "Land use map_2000-Jan-01 00_00_00.rdc"
+)
+aux_path = (
+    working_directory + "\\Log\\Land_use\\"
+                        "Land use map_2000-Jan-01 00_00_00.rst.aux.xml"
+)
 
 # Perform the iterative testing.
 for x in range(0, len(testing_range)):
@@ -389,27 +406,13 @@ for x in range(0, len(testing_range)):
     # Reset the run count to zero.
     run_count = 0
     while run_count < max_runs:
-        # Provide user feedback on the run being performed.
-        print("Run: " + str(run_count + 1))
-        # Generate the seed, input into the model, and run to generate output.
+        print("Run: " + str(run_count))
+        # Generate seed, run model to generate output.
         rseed = base_seed + run_count
         set_rand(project_file, rseed)
         run_metro(project_file, log_file, working_directory,
-                  geo_cmd)
-        # Create the analysis id for the Fuzzy Kappa.
-        analysis_id_fk = mcl.createAnalysis()
-        # Create the analysis id for the FKS.
-        analysis_id_fks = mcl.createAnalysis()
-        # Load the original map for the analysis of FK.
-        mcl.loadOriginalMap(analysis_id_fks, omap_path)
-        # Load the actual map for the analysis of FK and FKS.
-        mcl.loadMapActual(analysis_id_fk, amap_path)
-        mcl.loadMapActual(analysis_id_fks, amap_path)
-        # Load the fuzzy weights for Fuzzy Kappa.
-        mcl.loadFuzzyWeights(analysis_id_fk, fuzzy_coefficients)
-        # Load the fuzzy transition weights for FKS.
-        mcl.loadTransitionFuzzyWeights(analysis_id_fks, fuzzy_trans_coefficients)
-        # Read in the simulated map.
+                    geo_cmd)
+        # Read in the map.
         smap = read_map(smap_path)
         # Read in the map for analysis of fuzzy kappa.
         mcl.loadMapSimulated(analysis_id_fk, smap_path)
@@ -421,10 +424,21 @@ for x in range(0, len(testing_range)):
         clu_log[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                         luc, pas, act,
                                                         luc_count)
-        # Clear the analysis for the fuzzy kappa (prevents errors).
-        mcl.clear(analysis_id_fk)
-        # Clear the analysis for the FKS (prevents errors).
-        mcl.clear(analysis_id_fks)
+        # Save a new version of the file.
+        new_file_name_rdc = (str(x) + "_" + str(run_count) + ".rdc")
+        new_file_name_rst = (str(x) + "_" + str(run_count) + ".rst")
+        new_file_name_xml = (str(x) + "_" + str(run_count) + ".rst.aux.xml")
+
+        copyfile(rdc_path, "C:\\Users\\charl\\OneDrive\\Documents\\"
+                           "ENC_Py3_1\\EU_output\\Sample_output\\" +
+                           new_file_name_rdc)
+        copyfile(smap_path, "C:\\Users\\charl\\OneDrive\\Documents\\"
+                            "ENC_Py3_1\\EU_output\\Sample_output\\" +
+                            new_file_name_rst)
+        copyfile(aux_path, "C:\\Users\\charl\\OneDrive\\Documents\\"
+                           "ENC_Py3_1\\EU_output\\Sample_output\\" +
+                           new_file_name_xml)
+
         # Add 1 to iterator to avoid infinite loop.
         run_count = run_count + 1
     # Log the output metrics in the dictionary.
@@ -435,7 +449,8 @@ for x in range(0, len(testing_range)):
     coarse_metrics[coarse_metrics_key].append(sum(clu_log) / len(clu_log))
 
 # Write the output metrics to a csv file.
-metrics_output_file = (output_path + case_study + "\\Meta_cal_output\\" + 
+"""
+metrics_output_file = (output_path + case_study + "\\Meta_cal_output\\" +
                        vp + "_coarse_cal_output.csv")
 store = [0]*4
 # Write to csv file.
@@ -450,7 +465,7 @@ with open (metrics_output_file, "w", newline='') as csv_file:
         store[2] = coarse_metrics[coarse_metrics_key][1]
         store[3] = coarse_metrics[coarse_metrics_key][2]
         writer.writerow(store)
-
+"""
 # Indicate completion with a beep
 import winsound
 Freq = 2500
