@@ -30,8 +30,6 @@ from kappa import ksim
 from area_weighted_clu import area_weighted_clu_error
 # Interact with csv files.
 import csv
-# Scale to log base 10
-from math import log10
 
 
 # Specify the base path to the directory containing the empirical neighbourhood
@@ -166,12 +164,12 @@ base_seed = 1000
 max_runs = 1
 # Specify the minimum, maximum, and number of intervals to be tested for the
 # meta-parameter values (theta).
-min_theta_st = 0.000
+min_theta_st = 0.075
 max_theta_st = 0.100
-min_theta_cp = 0.000
+min_theta_cp = 0.075
 max_theta_cp = 0.100
-min_theta_it = 0.000
-max_theta_it = 0.050
+min_theta_it = 0.0125
+max_theta_it = 0.025
 intervals = 5
 
 # Generate a list of meta-parameter values to test.
@@ -363,7 +361,7 @@ for p in range(0, intervals):
 
 # Write the output metrics to a csv file.
 metrics_output_file = (output_path + case_study + 
-    "\\Meta_cal_output\\coarse_cal_output.csv")
+    "\\Meta_cal_output\\fine_cal_output.csv")
 # Generate an empty list to store metric values.
 store = [0]*6
 # Write to csv file.
