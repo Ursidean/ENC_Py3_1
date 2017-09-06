@@ -35,7 +35,7 @@ import csv
 # calibration tool-pack.
 base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
 # Set the case study
-case_study = "Berlin"
+case_study = "Madrid"
 # Set the paths to the directories and relevant data
 data_path = base_path + "EU_data\\"
 output_path = base_path + "EU_output\\"
@@ -167,7 +167,7 @@ theta_it_high = 0.050
 # Initialise a tracking counter for different permutations
 # of the randomly generated parameters.
 iteration_counter = 0
-max_iterations = 1000
+max_iterations = 100
 # Initialise a tracking array
 tracker = np.zeros(shape=(max_iterations, 6))
 
