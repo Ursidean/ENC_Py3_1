@@ -28,6 +28,10 @@ import mcl
 from area_weighted_clu import area_weighted_clu_error
 # Interact with csv files.
 import csv
+<<<<<<< HEAD
+
+=======
+>>>>>>> 12dc25778503496be27ee4aaac894351c4810ffa
 
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
@@ -157,6 +161,31 @@ for i in range(0, act):
 # Set the base random number seed.
 base_seed = 1000
 # Set the number of simulation runs per iteration.
+<<<<<<< HEAD
+max_runs = 1
+# Specify the minimum, maximum, and number of intervals to be tested for the
+# meta-parameter values (theta).
+min_theta_st = 0.075
+max_theta_st = 0.100
+min_theta_cp = 0.075
+max_theta_cp = 0.100
+min_theta_it = 0.0125
+max_theta_it = 0.025
+intervals = 5
+
+# Generate a list of meta-parameter values to test.
+theta_st_values = []
+theta_cp_values = []
+theta_it_values = []
+for i in range(0, intervals):
+    st_range = i * (max_theta_st - min_theta_st) / (intervals - 1)
+    theta_st_values.append(min_theta_st + st_range)
+    cp_range = i * (max_theta_cp - min_theta_cp) / (intervals - 1)
+    theta_cp_values.append(min_theta_cp + cp_range)
+    it_range = i * (max_theta_it - min_theta_it) / (intervals - 1)
+    theta_it_values.append(min_theta_it + it_range)
+
+=======
 max_runs = 10
 # Set the varied parameter. Must be one of theta_st, theta_cp or theta_it
 vp = "theta_it"
@@ -186,6 +215,7 @@ elif vp == "theta_it":
     min_value = 0.000
     max_value = 0.020
     interval_size = 0.001
+>>>>>>> 12dc25778503496be27ee4aaac894351c4810ffa
 # Initialise a dictionary to store metric values.
 coarse_metrics = {}
 
@@ -435,9 +465,16 @@ for x in range(0, len(testing_range)):
     coarse_metrics[coarse_metrics_key].append(sum(clu_log) / len(clu_log))
 
 # Write the output metrics to a csv file.
+<<<<<<< HEAD
+metrics_output_file = (output_path + case_study + 
+    "\\Meta_cal_output\\fine_cal_output.csv")
+# Generate an empty list to store metric values.
+store = [0]*6
+=======
 metrics_output_file = (output_path + case_study + "\\Meta_cal_output\\" + 
                        vp + "_coarse_cal_output.csv")
 store = [0]*4
+>>>>>>> 12dc25778503496be27ee4aaac894351c4810ffa
 # Write to csv file.
 with open (metrics_output_file, "w", newline='') as csv_file:
     writer = csv.writer(csv_file)
