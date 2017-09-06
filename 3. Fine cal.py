@@ -16,24 +16,27 @@ from seed_rules import seed_rules
 from enrichment_factor import ef
 # Set neighbourhood rules based on a four-point structure.
 from set_NR import set_lp_rule
-# Import the time module to track the duration of the calibration method.
-import time
 # Set the random number seed in the Metronamica file.
 from set_rand import set_rand
 # Run the Metronamica model to generate output.
 from run_metro import run_metro
-# Determine the base 10 logarithm of a specified value.
-from math import log10
-# Calculate the Kappa Simulation value.
-from kappa import ksim
+# Module for calculation of Fuzzy Kappa.
+from fuzzy_kappa import fuzzy_kappa
+# Module for calculation of Fuzzy Kappa Simulation.
+from fuzzy_kappa import fks
+# Module for calculation of Area Weighted Absolute Avg. Clumpiness Error (AAWCE)
+from area_weigthed_clu import area_weighted_clu_error
+# Import the time module to track the duration of the calibration method.
+import time
 # Interaction with csv file format.
 import csv
 
+# Initialisation.
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
 base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
 # Set the case study.
-case_study = "Madrid"
+case_study = "Berlin"
 # Set the paths to the directories and relevant data.
 data_path = base_path + "EU_data\\"
 output_path = base_path + "EU_output\\"
@@ -43,11 +46,21 @@ omap_path = data_path + case_study + "\\" + case_study.lower() + "_1990.asc"
 amap_path = data_path + case_study + "\\" + case_study.lower() + "_2000.asc"
 # Specify the masking map.
 mask_path = data_path + case_study + "\\" + case_study.lower() + "_mask.asc"
+# Specify the fuzzy weights for the calculation of fuzzy Kappa.
+fuzzy_coefficients = data_path + "coeff13.txt"
+# Specify the fuzzy transition weights for the calculation of FKS.
+fuzzy_trans_coefficients = data_path + "coefficients13.txt"
+
 # Set the land-use class names.
 luc_names = ["Natural areas", "Arable land", "Permanent crops", "Pastures",
              "Agricultural areas", "Residential", "Industry & commerce",
              "Recreation areas", "Forest", "Road & rail", "Port area",
              "Airports", "Mine & dump sites", "Fresh water", "Marine water"]
+# Set the socio-economic group for each land-use class. This is used to set the
+# order of calibration.
+socio_eco_group = ["Recreational", "Other", "Other", "Other", "Other", 
+                   "Residential", "Work", "Recreational", "Recreational", 
+                   "Other", "Work", "Work", "Work", "Other", "Other"]
 # Set the land-use class parameters: number of land-use classes, passive,
 # feature, and active.
 luc = len(luc_names)
@@ -166,32 +179,113 @@ for i in range(0, luc):
             lim_rules[i, j] = xe
         set_lp_rule(project_file, fu_elem, lu_elem, y0, y1, y2, xe)
 
-# Set the fixed parameters for iterative testing.
-counter = 0
-total_iterations = 51
-c = 0.25
-# Set the base random number seed
+# Fine tuning.
+# Initialisation of variables.
+# Initialise a counter to track the number of model simulations performed.
+iterations_counter = 0
+# Set the base random number seed & max number of runs.
 base_seed = 1000
-max_runs = 1
-# Set a scaling variable based on consecutive adjustments
-scalar = 0
-# Set the old dev index to determine if scaling is required.
-old_index = [0, 0, 0]
-# Set maximum and minimum expected values for influence.
-max_influence = 100
-min_influence = 0
-# Initialise a matrix to track rule adjustment
-rule_tracker = np.zeros(shape=(total_iterations, 6))
-# Track the start of the calibration.
-start = time.time()
+max_runs = 10
+# Specify the maximum and minimum bounding values for different neighbourhood
+# components, and the golden section search tolerance:
+# Inertia point
+max_ip = 1000
+min_ip = 250
+gss_ip_tol = (max_ip - min_ip)/100
+# The self-influence tail influence value at distance 1.
+max_si = 100
+min_si = 0
+gss_si_tol = (max_si - min_si)/100
+# The conversion point
+max_cp = 100
+min_cp = 0
+gss_cp_tol = (max_cp - min_cp)/100
+# The interaction tail at distance 1.
+max_ct = 100
+min_ct = 0
+gss_ct_tol = (max_ct - min_ct)/100
+# Initialise two lists to track the rule adjusted by name.
+rule_from_tracker = []
+rule_to_tracker = []
+# Initialise a list to track the point that is fine tuned,
+# and the final value taken.
+pt_tracker = []
+pt_value = []
+# Initialisation of metrics.
+# Set the weighting values for weighted sum calculations (Fuzzy Kappa, Fuzzy 
+# Kappa Simulation, AAWCE).
+w1 = 1/3
+w2 = 1/3
+w3 = 1/3
+# Set the transformation metric ranges.
+r1 = [0.600, 1.000]
+r2 = [0.000, 0.500]
+r3 = [0.000, 0.100]
+# Initialise a list to track the individual metrics averaged over the number of 
+# runs that are performed.
+clu_log = []
+fk_log = []
+fks_log = []
+# Initialise a set of temp variables for storing metric values.
+clu_temp = [0] * max_runs
+fk_temp = [0] * max_runs
+fks_temp = [0] * max_runs
+# Initialise a list to track the composite metric.
+comp_log = []
+# Determine the starting point metrics.
+# Reset the run count.
+run_count = 0
+while run_count < max_runs:
+    # Set the random seed.
+    rseed = base_seed + run_count
+    set_rand(project_file, rseed)
+    # Run Metronamica to generate output.
+    run_metro(project_file, log_file, working_directory, geo_cmd)    
+    # Read in the simulated map.
+    smap = read_map(smap_path)
+    # Calculate the AAWCE.
+    clu_temp[run_count] = area_weighted_clu_error(amap, smap, mask, luc, pas,
+                                                  act, luc_count)
+    # Calculate the run Fuzzy Kappa.
+    fk_temp[run_count] = fuzzy_kappa(amap_path, smap_path, fuzzy_coefficients)
+    # Calculate the run Fuzzy Kappa Simulation.
+    fks_temp[run_count] = fks(omap_path, amap_path, smap_path,
+                              fuzzy_trans_coefficients)
+    # Add one to iterator (prevents an infinite loop!)
+    run_count = run_count + 1
+# Find the average over the number of runs performed.
+clu_avg = sum(clu_temp) / len(clu_temp)
+fk_avg = sum(fk_temp) / len(fk_temp)
+fks_avg = sum(fks_temp) / len(fks_temp)
+# Now determine the weighted sum.
 
-print(luc_count)
+
 
 
 """
 # Line-search calibration.
 # CODE
+# Initialise a matrix to track rule adjustment
+rule_tracker = np.zeros(shape=(total_iterations, 6))
+# Track the start of the calibration.
+start = time.time()
+"""
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 # Track the end of the calibration.
 end = time.time()
 # Determine the duration of the calibration method.
