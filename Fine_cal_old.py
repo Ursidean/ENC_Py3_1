@@ -32,9 +32,9 @@ import csv
 # Specify the base path to the directory containing the empirical neighbourhood
 # calibration tool-pack.
 base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
-# Set the case study.
-case_study = "Madrid"
-# Set the paths to the directories and relevant data.
+# Set the case study
+case_study = "Berlin"
+# Set the paths to the directories and relevant data
 data_path = base_path + "EU_data\\"
 output_path = base_path + "EU_output\\"
 # Specify the original map (data at time slice 1).
@@ -46,7 +46,7 @@ mask_path = data_path + case_study + "\\" + case_study.lower() + "_mask.asc"
 # Set the land-use class names.
 luc_names = ["Natural areas", "Arable land", "Permanent crops", "Pastures",
              "Agricultural areas", "Residential", "Industry & commerce",
-             "Recreation areas", "Forest", "Road & rail", "Port area",
+             "Recreation areas", "Forest", "Road & rail", "Seaports",
              "Airports", "Mine & dump sites", "Fresh water", "Marine water"]
 # Set the land-use class parameters: number of land-use classes, passive,
 # feature, and active.
@@ -185,12 +185,92 @@ rule_tracker = np.zeros(shape=(total_iterations, 6))
 # Track the start of the calibration.
 start = time.time()
 
-print(luc_count)
-
-
-"""
-# Line-search calibration.
-# CODE
+# Begin the iterative testing.
+while counter < total_iterations:
+    # Run the model a set number of times to determine the composite deviation.
+    run_count = 0
+    dev = np.zeros(shape=(max_distance, luc, luc))
+    while run_count < max_runs:
+        rseed = base_seed + run_count
+        # Set the random number seed.
+        set_rand(project_file, rseed)
+        # Run the model.
+        run_metro(project_file, log_file, working_directory, geo_cmd)
+        # Read the simulation map
+        smap = read_map(smap_path)
+        # Determine the enrichment factor values for the simualted output map.
+        smap_ef = ef(luc, max_distance, cdl, cd, N, omap, smap, mask, rows, 
+                     cols)
+        # Append the deviation matrix (the average will be used for the 
+        # evaluation).
+        for d in range(0, max_distance):
+            for p in range(0, luc):
+                for q in range(0, luc):
+                    dev[d, p, q] = dev[d, p, q] + log10((smap_ef[d, p, q] + c) /
+                                                        (data_ef[d, p, q] + c))
+        # Add one to model simulations counter.
+        run_count = run_count + 1
+    # Average the deviation over the number of simulation runs performend
+    dev = dev / max_runs
+    # Initialise variables to find the index of the largest deviation.
+    index = [0, 0, 0]
+    max_value = 0
+    sign = 1
+    # Identify the largest deviation.
+    for d in range(0, max_distance):
+        for p in range(0, act):
+            for q in range(0, luc):
+                # Skip if conversion point is not included.
+                if d == 0 and con_rules[q, p] == 0:
+                    pass
+                elif d > 0 and att_rules[q, p] == 0:
+                    pass                
+                else:
+                    if abs(dev[d, p + pas, q]) > max_value:
+                        index = [d, p + pas, q]
+                        max_value = abs(dev[d, p + pas, q])
+                        if dev[d, p + pas, q] > 0:
+                            sign = 1
+                        else:
+                            sign = -1
+    # Determine if adjustment of the same point consecutively.
+    if index == old_index:
+        scalar = scalar + 1
+    else:
+        scalar = 0        
+    # Set the adjustment distance index (either 0, 1 or 2).
+    adj_index = index[0]
+    if adj_index > 2:
+        adj_index = 2
+    # Set the adjustment value.
+    adj_value = 10**(-1*adj_index)*2**scalar
+    # Adjust the corresponding neighbourhood rule in the dictionary.
+    rule_key = "from " + luc_names[index[2]] + " to " + luc_names[index[1]]
+    if sign == 1:
+        rules[rule_key][adj_index] = rules[rule_key][adj_index] - adj_value
+    else:
+        rules[rule_key][adj_index] = rules[rule_key][adj_index] + adj_value
+    # Adjust corresponding rule (rule_key) in the Metronamica project file.
+    lu_elem = index[2]
+    fu_elem = index[1] - pas
+    y0 = rules[rule_key][0]
+    y1 = rules[rule_key][1]
+    y2 = rules[rule_key][2]
+    xe = rules[rule_key][3]
+    set_lp_rule(project_file, fu_elem, lu_elem, y0, y1, y2, xe)
+    # Update tracking information.
+    rule_tracker[counter, 0] = lu_elem
+    rule_tracker[counter, 1] = fu_elem
+    rule_tracker[counter, 2] = adj_index
+    rule_tracker[counter, 3] = rules[rule_key][adj_index]
+    rule_tracker[counter, 4] = max_value
+    rule_tracker[counter, 5] = ksim(omap, amap, smap, mask)
+    # Update the old index for the previous iteration scaling.
+    old_index = index
+    # Add one to the iterations of testing counter.
+    counter = counter + 1
+    # User feedback
+    print("Iterations completed: " + str(counter))
 
 # Track the end of the calibration.
 end = time.time()
@@ -254,4 +334,3 @@ Dur = 1000 # Set Duration To 1000 ms == 1 second
 winsound.Beep(Freq,Dur)
 
 # Completed!
-"""

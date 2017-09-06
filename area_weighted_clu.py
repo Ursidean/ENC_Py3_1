@@ -7,6 +7,7 @@ from read_map import read_map
 import numpy as np
 from clumpy_module import clumpiness_index
 
+
 def area_weighted_clu_error(map1, map2, mask, luc, pas, act, luc_count):
     # Calculate the clumpiness.
     map1_clumpiness = clumpiness_index(map1, mask, luc)
