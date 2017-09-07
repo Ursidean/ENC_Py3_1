@@ -218,8 +218,8 @@ w1 = 1/3
 w2 = 1/3
 w3 = 1/3
 # Set the transformation metric ranges.
-r1 = [0.600, 1.000]
-r2 = [0.000, 0.500]
+r1 = [0.800, 1.000]
+r2 = [0.000, 0.300]
 r3 = [0.000, 0.100]
 # Initialise a list to track the individual metrics averaged over the number of 
 # runs that are performed.
@@ -262,6 +262,8 @@ fks_avg = sum(fks_temp) / len(fks_temp)
 
 
 
+
+
 """
 # Line-search calibration.
 # CODE
@@ -271,21 +273,6 @@ rule_tracker = np.zeros(shape=(total_iterations, 6))
 start = time.time()
 """
 
-
-
-
-
-
-
-
-<<<<<<< HEAD
-
-
-"""
-# Line-search calibration.
-# CODE
-=======
->>>>>>> 437c854e6fd800996bda0dea94cd223b9f2c11bd
 
 
 
