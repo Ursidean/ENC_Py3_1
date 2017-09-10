@@ -33,7 +33,7 @@ import csv
 # calibration tool-pack.
 base_path = "C:\\Users\\charl\OneDrive\\Documents\\ENC_Py3_1\\"
 # Set the case study
-case_study = "Lisbon"
+case_study = "Madrid"
 # Set the paths to the directories and relevant data
 data_path = base_path + "EU_data\\"
 output_path = base_path + "EU_output\\"
@@ -44,9 +44,9 @@ amap_path = data_path + case_study + "\\" + case_study.lower() + "_2000.asc"
 # Specify the masking map.
 mask_path = data_path + case_study + "\\" + case_study.lower() + "_mask.asc"
 # Specify the fuzzy weights for the calculation of fuzzy Kappa.
-fuzzy_coefficients = data_path + "coeff14.txt"
+fuzzy_coefficients = data_path + "coeff13.txt"
 # Specify the fuzzy transition weights for the calculation of FKS.
-fuzzy_trans_coefficients = data_path + "coefficients14.txt"
+fuzzy_trans_coefficients = data_path + "coefficients13.txt"
 
 # Set the land-use class names.
 luc_names = ["Natural areas", "Arable land", "Permanent crops", "Pastures",
@@ -172,7 +172,7 @@ if vp == "theta_st":
     interval_size = 0.005
 elif vp == "theta_cp":
     # Value set by user.
-    theta_st = 0.090
+    theta_st = 0.040
     # Default fixed value.
     theta_it = 0.005
     # Set the range and interval size for the selected parameter.
@@ -181,8 +181,8 @@ elif vp == "theta_cp":
     interval_size = 0.0025
 elif vp == "theta_it":
     # Values set by user.
-    theta_st = 0.065
-    theta_cp = 0.0375
+    theta_st = 0.040
+    theta_cp = 0.050
 # Set the range and interval size for the selected parameter.
     min_value = 0.000
     max_value = 0.020
@@ -437,10 +437,10 @@ for x in range(0, len(testing_range)):
     coarse_metrics[coarse_metrics_key].append(sum(clu_log) / len(clu_log))
 
 # Write the output metrics to a csv file.
-metrics_output_file = (output_path + case_study + 
-                       "\\Meta_cal_output\\fine_cal_output.csv")
+metrics_output_file = (output_path + case_study + "\\Meta_cal_output\\" + vp +
+                       "_coarse_cal_output.csv")
 # Generate an empty list to store metric values.
-store = [0]*6
+store = [0]*4
 # Write to csv file.
 with open (metrics_output_file, "w", newline='') as csv_file:
     writer = csv.writer(csv_file)
