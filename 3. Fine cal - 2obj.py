@@ -20,14 +20,12 @@ from set_NR import set_lp_rule
 from set_rand import set_rand
 # Run the Metronamica model to generate output.
 from run_metro import run_metro
-# Module for calculation of Fuzzy Kappa.
-from fuzzy_kappa import fuzzy_kappa
 # Module for calculation of Fuzzy Kappa Simulation.
 from fuzzy_kappa import fks
 # Module for calculation of Area Weighted Absolute Avg. Clumpiness Error (AAWCE)
 from area_weighted_clu import area_weighted_clu_error
 # Module for calculating a weighted sum for 3 objectives.
-from calc_weighted_sum import ws_3_metrics
+from calc_weighted_sum import ws_2_metrics
 # Import the time module to track the duration of the calibration method.
 import time
 # Import operator module for evaluating lists.
@@ -54,8 +52,6 @@ omap_path = data_path + case_study + "\\" + case_study.lower() + "_1990.asc"
 amap_path = data_path + case_study + "\\" + case_study.lower() + "_2000.asc"
 # Specify the masking map.
 mask_path = data_path + case_study + "\\" + case_study.lower() + "_mask.asc"
-# Specify the fuzzy weights for the calculation of fuzzy Kappa.
-fuzzy_coefficients = data_path + "coeff13.txt"
 # Specify the fuzzy transition weights for the calculation of FKS.
 fuzzy_trans_coefficients = data_path + "coefficients13.txt"
 
@@ -194,7 +190,7 @@ gr = (sqrt(5) + 1)/2
 # Initialise a counter to track the number of model simulations performed.
 iterations_counter = 0
 # Specify the maximum number of model simulations.
-max_iterations = (5000 - 600)
+max_iterations = (5000 - 300)
 # Set the base random number seed & max number of runs.
 base_seed = 1000
 max_runs = 5
@@ -224,27 +220,22 @@ rule_to_tracker = []
 pt_tracker = []
 pt_value = []
 # Initialisation of metrics.
-# Set the weighting values for weighted sum calculations (Fuzzy Kappa, Fuzzy 
-# Kappa Simulation, AAWCE).
-w1 = 1/3
-w2 = 1/3
-w3 = 1/3
+# Set the weighting values for weighted sum calculations (Fuzzy Kappa
+# Simulation, AAWCE).
+w1 = 1/2
+w2 = 1/2
 # Set the transformation metric ranges.
-r1 = [0.800, 1.000]
-r2 = [0.000, 0.300]
-r3 = [0.000, 0.100]
+r1 = [0.000, 0.300]
+r2 = [0.000, 0.100]
 # Set whether to maximise or minimise the objectives.
 s1 = "maximise"
-s2 = "maximise"
-s3 = "minimise"
+s2 = "minimise"
 # Initialise a list to track the individual metrics averaged over the number of 
 # runs that are performed.
 clu_log = []
-fk_log = []
 fks_log = []
 # Initialise a set of temp variables for storing metric values.
 clu_temp = [0] * max_runs
-fk_temp = [0] * max_runs
 fks_temp = [0] * max_runs
 # Initialise a list to track the weighted sum.
 ws_log = []
@@ -262,8 +253,6 @@ while run_count < max_runs:
     # Calculate the AAWCE.
     clu_temp[run_count] = area_weighted_clu_error(amap, smap, mask, luc, pas,
                                                   act, luc_count)
-    # Calculate the run Fuzzy Kappa.
-    fk_temp[run_count] = fuzzy_kappa(amap_path, smap_path, fuzzy_coefficients)
     # Calculate the run Fuzzy Kappa Simulation.
     fks_temp[run_count] = fks(omap_path, amap_path, smap_path,
                               fuzzy_trans_coefficients)
@@ -271,11 +260,9 @@ while run_count < max_runs:
     run_count = run_count + 1
 # Find the average over the number of runs performed.
 clu_avg = sum(clu_temp) / len(clu_temp)
-fk_avg = sum(fk_temp) / len(fk_temp)
 fks_avg = sum(fks_temp) / len(fks_temp)
 # Now determine the weighted sum (ws).
-ws_avg = ws_3_metrics(fk_avg, fks_avg, clu_avg, w1, w2, w3, r1, r2, r3, s1,
-                      s2, s3)
+ws_avg = ws_2_metrics(fks_avg, clu_avg, w1, w2, r1, r2, s1, s2)
 """
 # Don't log these, complicates logging.
 # Log the initial metrics.
@@ -352,7 +339,6 @@ while sum(ip_order) > 0:
             # Set the neighbourhood rule to the lower interval values.
             set_lp_rule(project_file, fu_elem, lu_elem, c, y1, y2, xe)
             # Run the model, evaluate performance.
-            fk_temp_c = [0] * max_runs
             fks_temp_c = [0] * max_runs
             clu_temp_c = [0] * max_runs
             # Reset the run count.
@@ -372,9 +358,6 @@ while sum(ip_order) > 0:
                 clu_temp_c[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                                 luc, pas, act,
                                                                 luc_count)
-                # Calculate the run Fuzzy Kappa.
-                fk_temp_c[run_count] = fuzzy_kappa(amap_path, smap_path,
-                                                   fuzzy_coefficients)
                 # Calculate the run Fuzzy Kappa Simulation.
                 fks_temp_c[run_count] = fks(omap_path, amap_path, smap_path,
                                             fuzzy_trans_coefficients)
@@ -382,15 +365,12 @@ while sum(ip_order) > 0:
                 run_count = run_count + 1
             # Find the average over the number of runs performed.
             clu_avg_c = sum(clu_temp_c) / len(clu_temp_c)
-            fk_avg_c = sum(fk_temp_c) / len(fk_temp_c)
             fks_avg_c = sum(fks_temp_c) / len(fks_temp_c)
             # Now determine the weighted sum.
-            ws_c = ws_3_metrics(fk_avg_c, fks_avg_c, clu_avg_c, w1, w2, w3, r1,
-                                r2, r3, s1, s2, s3)
+            ws_c = ws_2_metrics(fks_avg_c, clu_avg_c, w1, w2, r1, r2, s1, s2)
             # Now set the neighbourhood rule to the higher interval value.
             set_lp_rule(project_file, fu_elem, lu_elem, d, y1, y2, xe)
             # Run the model, evaluate performance.
-            fk_temp_d = [0] * max_runs
             fks_temp_d = [0] * max_runs
             clu_temp_d = [0] * max_runs
             # Reset the run count.
@@ -410,9 +390,6 @@ while sum(ip_order) > 0:
                 clu_temp_d[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                                 luc, pas, act,
                                                                 luc_count)
-                # Calculate the run Fuzzy Kappa.
-                fk_temp_d[run_count] = fuzzy_kappa(amap_path, smap_path,
-                                                   fuzzy_coefficients)
                 # Calculate the run Fuzzy Kappa Simulation.
                 fks_temp_d[run_count] = fks(omap_path, amap_path, smap_path,
                                             fuzzy_trans_coefficients)
@@ -420,11 +397,9 @@ while sum(ip_order) > 0:
                 run_count = run_count + 1
             # Find the average over the number of runs performed.
             clu_avg_d = sum(clu_temp_d) / len(clu_temp_d)
-            fk_avg_d = sum(fk_temp_d) / len(fk_temp_d)
             fks_avg_d = sum(fks_temp_d) / len(fks_temp_d)
             # Now determine the weighted sum.
-            ws_d = ws_3_metrics(fk_avg_d, fks_avg_d, clu_avg_d, w1, w2, w3, r1,
-                                r2, r3, s1, s2, s3)
+            ws_d = ws_2_metrics(fks_avg_d, clu_avg_d, w1, w2, r1, r2, s1, s2)
             # Add step here to break out if objectives are not changing.
             if ws_avg == ws_c and ws_avg == ws_d:
                 break
@@ -442,7 +417,6 @@ while sum(ip_order) > 0:
             # Reset the value if there was not change.
             rules[rule_name][0] = old_y0
             set_lp_rule(project_file, fu_elem, lu_elem, old_y0, y1, y2, xe)
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -456,12 +430,10 @@ while sum(ip_order) > 0:
             pt_value.append(final_value)
             rules[rule_name][0] = final_value
             # Now update the best set of objectives.
-            fk_avg = fk_avg_c
             fks_avg = fks_avg_c
             clu_avg = clu_avg_c
             ws_avg = ws_c
             # Log the output.
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -474,12 +446,10 @@ while sum(ip_order) > 0:
             pt_value.append(final_value)
             rules[rule_name][0] = final_value
             # Now update the best set of objectives.
-            fk_avg = fk_avg_d
             fks_avg = fks_avg_d
             clu_avg = clu_avg_d
             ws_avg = ws_d
             # Log the output.
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -550,7 +520,6 @@ while sum(st_order) > 0:
             c2 = 0.1 * c
             set_lp_rule(project_file, fu_elem, lu_elem, y0, c, c2, xe)
             # Run the model, evaluate performance.
-            fk_temp_c = [0] * max_runs
             fks_temp_c = [0] * max_runs
             clu_temp_c = [0] * max_runs
             # Reset the run count.
@@ -570,9 +539,6 @@ while sum(st_order) > 0:
                 clu_temp_c[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                                 luc, pas, act,
                                                                 luc_count)
-                # Calculate the run Fuzzy Kappa.
-                fk_temp_c[run_count] = fuzzy_kappa(amap_path, smap_path,
-                                                   fuzzy_coefficients)
                 # Calculate the run Fuzzy Kappa Simulation.
                 fks_temp_c[run_count] = fks(omap_path, amap_path, smap_path,
                                             fuzzy_trans_coefficients)
@@ -580,16 +546,13 @@ while sum(st_order) > 0:
                 run_count = run_count + 1
             # Find the average over the number of runs performed.
             clu_avg_c = sum(clu_temp_c) / len(clu_temp_c)
-            fk_avg_c = sum(fk_temp_c) / len(fk_temp_c)
             fks_avg_c = sum(fks_temp_c) / len(fks_temp_c)
             # Now determine the weighted sum.
-            ws_c = ws_3_metrics(fk_avg_c, fks_avg_c, clu_avg_c, w1, w2, w3, r1,
-                                r2, r3, s1, s2, s3)
+            ws_c = ws_2_metrics(fks_avg_c, clu_avg_c, w1, w2, r1, r2, s1, s2)
             # Now set the neighbourhood rule to the higher interval value.
             d2 = 0.1 * d
             set_lp_rule(project_file, fu_elem, lu_elem, y0, d, d2, xe)
             # Run the model, evaluate performance.
-            fk_temp_d = [0] * max_runs
             fks_temp_d = [0] * max_runs
             clu_temp_d = [0] * max_runs
             # Reset the run count.
@@ -609,9 +572,6 @@ while sum(st_order) > 0:
                 clu_temp_d[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                                 luc, pas, act,
                                                                 luc_count)
-                # Calculate the run Fuzzy Kappa.
-                fk_temp_d[run_count] = fuzzy_kappa(amap_path, smap_path,
-                                                   fuzzy_coefficients)
                 # Calculate the run Fuzzy Kappa Simulation.
                 fks_temp_d[run_count] = fks(omap_path, amap_path, smap_path,
                                             fuzzy_trans_coefficients)
@@ -619,11 +579,9 @@ while sum(st_order) > 0:
                 run_count = run_count + 1
             # Find the average over the number of runs performed.
             clu_avg_d = sum(clu_temp_d) / len(clu_temp_d)
-            fk_avg_d = sum(fk_temp_d) / len(fk_temp_d)
             fks_avg_d = sum(fks_temp_d) / len(fks_temp_d)
             # Now determine the weighted sum.
-            ws_d = ws_3_metrics(fk_avg_d, fks_avg_d, clu_avg_d, w1, w2, w3, r1,
-                                r2, r3, s1, s2, s3)
+            ws_d = ws_2_metrics(fks_avg_d, clu_avg_d, w1, w2, r1, r2, s1, s2)
             # Add step here to break out if objectives are not changing.
             if ws_avg == ws_c and ws_avg == ws_d:
                 break
@@ -643,7 +601,6 @@ while sum(st_order) > 0:
             set_lp_rule(project_file, fu_elem, lu_elem, y0, old_y1,
                         old_y2, xe)
             pt_value.append(old_y1)
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -659,12 +616,10 @@ while sum(st_order) > 0:
             rules[rule_name][1] = final_value
             rules[rule_name][2] = final_value_2
             # Now update the best set of objectives.
-            fk_avg = fk_avg_c
             fks_avg = fks_avg_c
             clu_avg = clu_avg_c
             ws_avg = ws_c
             # Log the output.
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -680,12 +635,10 @@ while sum(st_order) > 0:
             rules[rule_name][1] = final_value
             rules[rule_name][2] = final_value_2
             # Now update the best set of objectives.
-            fk_avg = fk_avg_d
             fks_avg = fks_avg_d
             clu_avg = clu_avg_d
             ws_avg = ws_d
             # Log the output.
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -776,7 +729,6 @@ while np.sum(cp_order > 0):
             # Set the neighbourhood rule to the lower interval values.
             set_lp_rule(project_file, fu_elem, lu_elem, c, y1, y2, xe)
             # Run the model, evaluate performance.
-            fk_temp_c = [0] * max_runs
             fks_temp_c = [0] * max_runs
             clu_temp_c = [0] * max_runs
             # Reset the run count.
@@ -795,9 +747,6 @@ while np.sum(cp_order > 0):
                 clu_temp_c[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                                 luc, pas, act,
                                                                 luc_count)
-                # Calculate the run Fuzzy Kappa.
-                fk_temp_c[run_count] = fuzzy_kappa(amap_path, smap_path,
-                                                   fuzzy_coefficients)
                 # Calculate the run Fuzzy Kappa Simulation.
                 fks_temp_c[run_count] = fks(omap_path, amap_path, smap_path,
                                             fuzzy_trans_coefficients)
@@ -805,15 +754,12 @@ while np.sum(cp_order > 0):
                 run_count = run_count + 1
             # Find the average over the number of runs performed.
             clu_avg_c = sum(clu_temp_c) / len(clu_temp_c)
-            fk_avg_c = sum(fk_temp_c) / len(fk_temp_c)
             fks_avg_c = sum(fks_temp_c) / len(fks_temp_c)
             # Now determine the weighted sum.
-            ws_c = ws_3_metrics(fk_avg_c, fks_avg_c, clu_avg_c, w1, w2, w3, r1,
-                                r2, r3, s1, s2, s3)
+            ws_c = ws_2_metrics(fks_avg_c, clu_avg_c, w1, w2, r1, r2, s1, s2)
             # Now set the neighbourhood rule to the higher interval value.
             set_lp_rule(project_file, fu_elem, lu_elem, d, y1, y2, xe)
             # Run the model, evaluate performance.
-            fk_temp_d = [0] * max_runs
             fks_temp_d = [0] * max_runs
             clu_temp_d = [0] * max_runs
             # Reset the run count.
@@ -832,9 +778,6 @@ while np.sum(cp_order > 0):
                 clu_temp_d[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                                 luc, pas, act,
                                                                 luc_count)
-                # Calculate the run Fuzzy Kappa.
-                fk_temp_d[run_count] = fuzzy_kappa(amap_path, smap_path,
-                                                   fuzzy_coefficients)
                 # Calculate the run Fuzzy Kappa Simulation.
                 fks_temp_d[run_count] = fks(omap_path, amap_path, smap_path,
                                             fuzzy_trans_coefficients)
@@ -842,11 +785,9 @@ while np.sum(cp_order > 0):
                 run_count = run_count + 1
             # Find the average over the number of runs performed.
             clu_avg_d = sum(clu_temp_d) / len(clu_temp_d)
-            fk_avg_d = sum(fk_temp_d) / len(fk_temp_d)
             fks_avg_d = sum(fks_temp_d) / len(fks_temp_d)
             # Now determine the weighted sum.
-            ws_d = ws_3_metrics(fk_avg_d, fks_avg_d, clu_avg_d, w1, w2, w3, r1,
-                                r2, r3, s1, s2, s3)
+            ws_d = ws_2_metrics(fks_avg_d, clu_avg_d, w1, w2, r1, r2, s1, s2)
             # Add step here to break out if objectives are not changing.
             if ws_avg == ws_c and ws_avg == ws_d:
                 break
@@ -864,7 +805,6 @@ while np.sum(cp_order > 0):
             # Reset the value if there was not change.
             rules[rule_name][0] = old_y0
             set_lp_rule(project_file, fu_elem, lu_elem, old_y0, y1, y2, xe)
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -878,12 +818,10 @@ while np.sum(cp_order > 0):
             pt_value.append(final_value)
             rules[rule_name][0] = final_value
             # Now update the best set of objectives.
-            fk_avg = fk_avg_c
             fks_avg = fks_avg_c
             clu_avg = clu_avg_c
             ws_avg = ws_c
             # Log the output.
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -896,12 +834,10 @@ while np.sum(cp_order > 0):
             pt_value.append(final_value)
             rules[rule_name][0] = final_value
             # Now update the best set of objectives.
-            fk_avg = fk_avg_d
             fks_avg = fks_avg_d
             clu_avg = clu_avg_d
             ws_avg = ws_d
             # Log the output.
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -995,7 +931,6 @@ while np.sum(it_order) > 0:
             c2 = 0.1*c
             set_lp_rule(project_file, fu_elem, lu_elem, y0, c, c2, xe)
             # Run the model, evaluate performance.
-            fk_temp_c = [0] * max_runs
             fks_temp_c = [0] * max_runs
             clu_temp_c = [0] * max_runs
             # Reset the run count.
@@ -1015,9 +950,6 @@ while np.sum(it_order) > 0:
                 clu_temp_c[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                                 luc, pas, act,
                                                                 luc_count)
-                # Calculate the run Fuzzy Kappa.
-                fk_temp_c[run_count] = fuzzy_kappa(amap_path, smap_path,
-                                                   fuzzy_coefficients)
                 # Calculate the run Fuzzy Kappa Simulation.
                 fks_temp_c[run_count] = fks(omap_path, amap_path, smap_path,
                                             fuzzy_trans_coefficients)
@@ -1025,16 +957,13 @@ while np.sum(it_order) > 0:
                 run_count = run_count + 1
             # Find the average over the number of runs performed.
             clu_avg_c = sum(clu_temp_c) / len(clu_temp_c)
-            fk_avg_c = sum(fk_temp_c) / len(fk_temp_c)
             fks_avg_c = sum(fks_temp_c) / len(fks_temp_c)
             # Now determine the weighted sum.
-            ws_c = ws_3_metrics(fk_avg_c, fks_avg_c, clu_avg_c, w1, w2, w3, r1,
-                                r2, r3, s1, s2, s3)
+            ws_c = ws_2_metrics(fks_avg_c, clu_avg_c, w1, w2, r1, r2, s1, s2)
             # Now set the neighbourhood rule to the higher interval value.
             d2 = 0.1 * d
             set_lp_rule(project_file, fu_elem, lu_elem, y0, d, d2, xe)
             # Run the model, evaluate performance.
-            fk_temp_d = [0] * max_runs
             fks_temp_d = [0] * max_runs
             clu_temp_d = [0] * max_runs
             # Reset the run count.
@@ -1054,9 +983,6 @@ while np.sum(it_order) > 0:
                 clu_temp_d[run_count] = area_weighted_clu_error(amap, smap, mask,
                                                                 luc, pas, act,
                                                                 luc_count)
-                # Calculate the run Fuzzy Kappa.
-                fk_temp_d[run_count] = fuzzy_kappa(amap_path, smap_path,
-                                                   fuzzy_coefficients)
                 # Calculate the run Fuzzy Kappa Simulation.
                 fks_temp_d[run_count] = fks(omap_path, amap_path, smap_path,
                                             fuzzy_trans_coefficients)
@@ -1064,11 +990,9 @@ while np.sum(it_order) > 0:
                 run_count = run_count + 1
             # Find the average over the number of runs performed.
             clu_avg_d = sum(clu_temp_d) / len(clu_temp_d)
-            fk_avg_d = sum(fk_temp_d) / len(fk_temp_d)
             fks_avg_d = sum(fks_temp_d) / len(fks_temp_d)
             # Now determine the weighted sum.
-            ws_d = ws_3_metrics(fk_avg_d, fks_avg_d, clu_avg_d, w1, w2, w3, r1,
-                                r2, r3, s1, s2, s3)
+            ws_d = ws_2_metrics(fks_avg_d, clu_avg_d, w1, w2, r1, r2, s1, s2)
             # Add step here to break out if objectives are not changing.
             if ws_avg == ws_c and ws_avg == ws_d:
                 break
@@ -1087,7 +1011,6 @@ while np.sum(it_order) > 0:
             rules[rule_name][2] = old_y2
             set_lp_rule(project_file, fu_elem, lu_elem, y0, old_y1, old_y2, xe)
             pt_value.append(old_y1)
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -1103,12 +1026,10 @@ while np.sum(it_order) > 0:
             rules[rule_name][1] = final_value
             rules[rule_name][2] = final_value_2
             # Now update the best set of objectives.
-            fk_avg = fk_avg_c
             fks_avg = fks_avg_c
             clu_avg = clu_avg_c
             ws_avg = ws_c
             # Log the output.
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -1124,12 +1045,10 @@ while np.sum(it_order) > 0:
             rules[rule_name][1] = final_value
             rules[rule_name][2] = final_value_2
             # Now update the best set of objectives.
-            fk_avg = fk_avg_d
             fks_avg = fks_avg_d
             clu_avg = clu_avg_d
             ws_avg = ws_d
             # Log the output.
-            fk_log.append(fk_avg)
             fks_log.append(fks_avg)
             clu_log.append(clu_avg)
             ws_log.append(ws_avg)
@@ -1173,11 +1092,11 @@ with open(output_rules_file, "w", newline='') as csv_file:
 # Write the output log.
 log_output_file = (output_path + "\\" + case_study + "\\Fine_cal_output\\" +
                    case_study + "_fine_tuning_output.csv")
-store = [0]*8
+store = [0]*7
 with open(log_output_file, "w", newline='') as csv_file:
     writer = csv.writer(csv_file)
     # Save and write a header line to the file
-    values = ["From", "To", "Distance", "Value", "FK", "FKS", "AAWCE", "WS"]
+    values = ["From", "To", "Distance", "Value", "FKS", "AAWCE", "WS"]
     writer.writerow(values)
     # Now write the log
     for i in range(0, len(pt_value)):
@@ -1185,10 +1104,9 @@ with open(log_output_file, "w", newline='') as csv_file:
         store[1] = luc_names[rule_to_tracker[i] + pas]
         store[2] = pt_tracker[i]
         store[3] = pt_value[i]
-        store[4] = fk_log[i]
-        store[5] = fks_log[i]
-        store[6] = clu_log[i]
-        store[7] = ws_log[i]
+        store[4] = fks_log[i]
+        store[5] = clu_log[i]
+        store[6] = ws_log[i]
         writer.writerow(store)
 
 # Indicate completion with a beep.
